@@ -2,6 +2,7 @@
 import { useActionState, useEffect, useRef, type ReactNode } from "react";
 import type { ActionResult } from "@/lib/errors";
 import { Alert } from "./alert";
+import { submitWithoutReset } from "./submit-without-reset";
 
 type Action = (prev: ActionResult<unknown> | null, formData: FormData) => Promise<ActionResult<unknown>>;
 
@@ -30,7 +31,7 @@ export function ActionForm({
     if (state?.ok && resetOnSuccess) ref.current?.reset();
   }, [state, resetOnSuccess]);
   return (
-    <form ref={ref} action={formAction} className={className} id={id} noValidate={false}>
+    <form ref={ref} action={formAction} onSubmit={submitWithoutReset(formAction)} className={className} id={id}>
       {children}
       <div aria-live="polite" className="mt-3 empty:hidden">
         {state && !state.ok ? <Alert tone="error">{state.error}</Alert> : null}

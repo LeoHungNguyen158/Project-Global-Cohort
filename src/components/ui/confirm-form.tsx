@@ -5,6 +5,7 @@ import { Dialog } from "./dialog";
 import { Alert } from "./alert";
 import { buttonClass } from "./button";
 import { SubmitButton } from "./submit-button";
+import { submitWithoutReset } from "./submit-without-reset";
 
 type Action = (prev: ActionResult<unknown> | null, formData: FormData) => Promise<ActionResult<unknown>>;
 
@@ -54,7 +55,7 @@ export function ConfirmForm({
         {state && state.ok && state.message && !open ? <Alert tone="success" className="mt-2">{state.message}</Alert> : null}
       </div>
       <Dialog open={open} onClose={() => setOpen(false)} title={title} description={description}>
-        <form action={formAction} className="space-y-4">
+        <form action={formAction} onSubmit={submitWithoutReset(formAction)} className="space-y-4">
           {Object.entries(fields).map(([k, v]) => (
             <input key={k} type="hidden" name={k} value={v} />
           ))}
