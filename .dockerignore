@@ -26,4 +26,5 @@ supabase/.branches
 *.zip
 *.dump
 *.sql.gz
+backups
 tsconfig.tsbuildinfo
