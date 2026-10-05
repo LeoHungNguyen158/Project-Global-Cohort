@@ -110,8 +110,10 @@ database; the commands above are the independent copy and the only copy of the f
 
 - **First administrator**: `npm run admin:bootstrap -- --user-id <uuid> --yes` (see
   [SETUP.md](SETUP.md)).
-- **Invitations** are sent through Supabase Auth email. The invitation list shows whether the
-  provider accepted each email; "accepted by provider" is not proof of delivery.
+- **Invitations** are sent through Supabase Auth email. A person who already has a confirmed
+  account gets an in-app notification instead of an email. The invitation list
+  (Administration → Invitations) shows whether the provider accepted each email; "accepted
+  by provider" is not proof of delivery.
 - **Suspension** (Administration → Users) blocks the account on its next request; it does
   not delete records. **Enrollment revocation** removes course access immediately.
 - Academic records (grades, submissions, attempts) are never hard-deleted by the app;

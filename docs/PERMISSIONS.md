@@ -53,7 +53,7 @@ person holds that role; "cohort" = offerings in cohorts the coordinator administ
 | Create an account by signing up | — | — | — | — | — | — | — | Public sign-up is disabled; accounts come from invitations |
 | Edit own name, bio, avatar, locale, timezone | — | own | own | own | own | own | own | column grants + `profiles_update_self` + `guard_profile_update` |
 | See another person's display name | — | people sharing an offering, cohort or thread | same | same | same | same | ✓ | `profiles_select` (`shares_scope`) |
-| See another person's email | — | — | — | — | — | — | ✓ (admin user list) | emails live in `auth.users`, exposed only by `admin_list_users` |
+| See another person's email | — | — | — | — | — | no, except the invited address on invitations in their cohorts (Invitations page, and the audit record of those invitations) | ✓ (Users, rosters, access requests, community members) | emails live in `auth.users`; `admin_users_page`, `admin_user_detail` and `admin_find_user` are for platform administrators only (`admin_find_user` returns no email), and `admin_offering_people`, `admin_cohort_people`, `admin_list_access_requests` and `admin_community_people` return the email only to platform administrators (null for coordinators); invitation addresses follow `invitations_select` (`is_cohort_admin`) |
 
 ### Catalog and enrollment
 
@@ -123,14 +123,15 @@ offering B shows: B keeps its adopted version until B's own staff adopt another 
 | Edit own posts (history kept) | own, not hidden | own | own | own | own | `posts_update_own`, `on_post_edit` |
 | Moderate discussions (hide, pin, lock) | — | ✓ (communicate) | ✓ | ✓ | ✓ | `can_moderate_topic`, `hide_discussion_post` |
 | Calendar events | read in scope | create/edit (communicate) | ✓ | cohort events | ✓ | `calendar_*` |
-| Tools and resources | read published entries in scope | manage offering entries | ✓ | cohort entries | global entries | `tools_*` |
+| Tools and resources | read published entries in scope | manage offering entries | ✓ | entries of their cohorts and those cohorts' offerings | every scope, including platform-wide | `tools_*` |
 | Join or leave open communities | ✓ (never grants course access) | ✓ | ✓ | ✓ | ✓ | `community_members_*` |
+| Create and edit communities; add and remove members (invitation-only included) | — | — | — | their cohorts' communities | all, including program-wide | `communities_write`, `admin_add_community_member`, `admin_remove_community_member` (audited). Only eligible people can be added: an active account and, for a cohort's community, someone who belongs to that cohort. A community cannot move to a cohort some of its members are not in. |
 
 ### Administration
 
 | Capability | Coordinator | Platform admin | Enforced by |
 |---|---|---|---|
-| User list with emails, suspend/reactivate, grant/revoke roles | — | ✓ (cannot suspend or demote self) | `admin_list_users`, `admin_set_suspended`, `admin_set_role` |
+| User list with emails, suspend/reactivate, grant/revoke roles | — | ✓ (cannot suspend or reactivate self, or remove own administrator role) | `admin_users_page`, `admin_user_detail`, `admin_set_account_suspension`, `admin_set_role` |
 | Coordinator scopes | — | ✓ | `coordinator_scopes_write` |
 | Audit log | events in their cohorts | ✓ | `audit_select` |
 | Platform settings and upload limits | — | ✓ | `settings_write`, `upload_limits_write` |
@@ -170,9 +171,13 @@ Sensitive changes write `audit_events` with actor, scope (cohort/offering), acti
 and change metadata. A row trigger records every insert, update and delete on
 `platform_role_grants`, `coordinator_scopes`, `cohort_participation`, `staff_assignments`,
 `enrollments`, `invitations`, `cohorts`, `courses`, `course_offerings`,
-`prerequisite_rules`, `prerequisite_overrides`, `grades` and `quiz_accommodations`.
-RPCs add explicit events for course version drafts, publication and adoption, quiz
-publication and answer release, short-answer grading, attempt voids, submission returns,
-grade publication and unpublication, suspensions and reinstatements, access-request
-decisions and withdrawals, and hidden discussion posts. Audit rows are readable only by
+`prerequisite_rules`, `prerequisite_overrides`, `grades`, `quiz_accommodations`,
+`calendar_events`, `tool_resources` and `communities`.
+RPCs add explicit events for course duplication, course version drafts, publication and
+adoption, offering publication and completion, quiz publication and answer release,
+short-answer grading, attempt voids and time extensions, submission grading and returns,
+grade publication and unpublication, announcement publication and status changes, suspensions and
+reinstatements, access-request decisions and withdrawals, invitation revocation, upload
+release and rejection, settings and upload-limit changes, community members added or
+removed by administrators, and hidden discussion posts. Audit rows are readable only by
 platform administrators and, for their cohorts, coordinators.

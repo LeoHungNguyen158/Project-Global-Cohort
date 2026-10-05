@@ -63,7 +63,8 @@ The full schema is in `supabase/migrations/20261005000100_core_schema.sql`.
 - **Roles**: `platform_role_grants` (platform_admin, coordinator), `coordinator_scopes`
   (coordinator ↔ cohort), `staff_assignments` (instructor or TA per offering, with
   explicit TA flags), `enrollments` (learner per offering), `cohort_participation`,
-  `community_members` (optional communities never grant course access).
+  `communities` and `community_members` (optional communities never grant course access),
+  `invitations` and `access_requests`.
 - **Learning**: `modules`, `lessons`, `content_assets`, `lesson_assets`,
   `prerequisite_rules` (lesson completion, minimum released quiz score, scheduled release),
   `prerequisite_overrides` (audited), `lesson_progress`, `completion_snapshots`.
@@ -77,7 +78,8 @@ The full schema is in `supabase/migrations/20261005000100_core_schema.sql`.
   written only by publication). Unpublished grades are never in a table learners can read.
 - **Communication**: `threads`, `thread_participants`, `messages`, `announcements` (+
   revisions), `discussion_topics`, `discussion_posts` (+ revisions), `notifications`,
-  `notification_preferences`, `notification_outbox` (reserved for optional email; unused).
+  `notification_preferences`, `notification_outbox` (reserved for optional email; unused),
+  `calendar_events`, `tool_resources` (Tools directory).
 - **Operations**: `audit_events`, `platform_settings`, `upload_limits`,
   `private.rate_limits` (database-backed rate limiting; no in-process state).
 
@@ -110,14 +112,18 @@ The full schema is in `supabase/migrations/20261005000100_core_schema.sql`.
   raw iframe HTML.
 - **Headers**: CSP with a per-request nonce and `strict-dynamic`, `frame-ancestors 'none'`,
   `X-Frame-Options: DENY`, `nosniff`, HSTS, COOP, a restrictive Permissions-Policy, and no
-  `X-Powered-By`.
+  `X-Powered-By`. The CSP adds `upgrade-insecure-requests` only outside development and
+  only when `NEXT_PUBLIC_SUPABASE_URL` is an https URL, so a local production build against
+  the http Supabase stack keeps working signed file links.
 - **Redirects**: post-login and notification redirects accept same-origin relative paths
   only (`src/lib/safe-redirect.ts`).
 - **CSRF**: Server Actions use Next.js origin checks; route handlers that change state are
   not exposed as GET.
 - **Rate limits** (database-backed, per user per hour): upload registrations 120, new
-  message threads 30, messages 120, discussion posts 60, quiz attempt starts 30, catalog
-  access requests 10. Supabase Auth applies its own sign-in, recovery and email limits.
+  message threads 30, messages 120, discussion topics 20, discussion posts 60, quiz attempt
+  starts 30, catalog access requests 10, invitations created 300 and sent 120 per
+  administrator, and 5 invitation sends per invited address. Supabase Auth applies its own
+  sign-in, recovery and email limits.
 
 ## Notifications
 
@@ -139,9 +145,15 @@ columns, and the server compares them with database time.
 
 ## Internationalization
 
-Interface strings live in per-area dictionaries under `src/i18n/messages/` and are read
-with `t(key, vars)`. English is the default and only complete locale; a Vietnamese
-dictionary can be added with the same keys. Course content and user data are never
+Interface strings live in per-area dictionaries under `src/i18n/messages/` (core,
+learning, assessment, grades, comms, account, admin) and are read with `t(key, vars)`.
+Server code imports `t` from `@/i18n`, which holds every dictionary. Client components
+import it from `src/i18n/client/<area>` instead, which combines only the core strings and
+that area's strings, so each page's browser bundle ships core plus its own area's text
+rather than every dictionary (`tests/unit/lib/i18n-client.test.ts` checks each client
+dictionary matches the full one). English is the default and only complete locale; a
+Vietnamese dictionary can be added with the same keys. A person's preferred language is
+saved on their profile for when one exists. Course content and user data are never
 machine-translated. Search and sorting use locale-aware comparison, so Vietnamese names
 work as entered.
 
@@ -153,9 +165,10 @@ src/app/(app)/           authenticated application (and public help/legal/catalo
 src/app/api/             route handlers: health, asset downloads, exports, polling, .ics
 src/app/actions/         server actions, one file per area
 src/components/          UI primitives (ui/), layout, and per-area components
-src/lib/                 auth, Supabase clients, data access, domain logic, time, i18n
+src/lib/                 auth, Supabase clients, data access, domain logic, time
+src/i18n/                interface dictionaries (messages/) and client-side subsets (client/)
 supabase/migrations/     schema, RLS, functions (applied in order)
-scripts/                 seed (sample data), admin bootstrap, maintenance
+scripts/                 seed (sample data), admin bootstrap, backup, restore, maintenance
 tests/db|unit|e2e        database/RLS tests, unit tests, browser tests
 docs/                    engineering documentation (this folder)
 ```

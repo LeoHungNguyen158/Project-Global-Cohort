@@ -77,7 +77,7 @@ polling and in-app notifications only.
 | Course activity cards | Ongoing offerings with accent, code, title, labeled unread-update count, staff "N to grade", learner "% complete" | Built |
 | Small flag count | Replaced by a **labeled** count ("3 unread updates"); the reference's meaning was not guessed | Adapted (brief R5 rule) |
 | View all courses | Link to `/courses` | Built |
-| Activity Stream with filter | Right-hand stream with a kind filter (Show all, announcements, content, due items, messages, grades) and Mark all read | Built |
+| Activity Stream with filter | Right-hand stream with a kind filter (Show All, announcements, grades, messages, course content, submissions, access requests, invitations, system) and Mark all as read; upcoming due items are in the separate deadlines panel | Built |
 | Recent timeline with dates and course context | Grouped timeline with date, time in the viewer's zone, course label, New badge | Built |
 | View my grade buttons | Grade notifications open `/grades/<offering>#item-<id>`; every event opens its exact target | Built |
 | (Brief) next deadlines | Upcoming deadlines panel for the next 14 days | Built |

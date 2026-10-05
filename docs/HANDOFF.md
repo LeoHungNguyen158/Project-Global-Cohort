@@ -5,21 +5,23 @@ Where the work stands and how to pick it up. Whoever stops work updates this fil
 
 ## Current state
 
-**Updated:** 2026-10-05, during the build.
+**Updated:** 2026-10-05, final build state.
 
 - Repository: `LeoHungNguyen158/Project-Global-Cohort`, branch `feat/global-cohort-lms`.
   The commit that last changed this file is the reference point; `git log origin/feat/global-cohort-lms`
   shows anything newer.
-- Pull request: not opened yet.
+- Built and committed on the branch: database schema with row-level security and private
+  storage, synthetic seed, sign-in and password reset, app shell, Activity and Courses;
+  the course workspace, content, authoring, uploads and video; quizzes and assignments;
+  grades and calendar; messages, announcements, discussions, cohorts and communities;
+  administration, including Administration → Communities; catalog, profile, tools, help,
+  legal pages and invitation acceptance; operator commands (first admin, backup, restore,
+  orphan cleanup), CI, Docker files for the VPS route, and the docs listed in the README.
+  [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) has the item-by-item state and
+  known gaps; [ACCEPTANCE_REPORT.md](ACCEPTANCE_REPORT.md) has the acceptance evidence.
+- Pull request: a pull request from this branch to `main` is being opened; see the pull
+  request from this branch for its number and CI state.
 - Deployment: none. Nothing has been deployed to Hostinger or to a hosted Supabase project.
-- Done and pushed: database schema with row-level security and private storage, synthetic
-  seed, sign-in and password reset, app shell, Activity and Courses pages, operator
-  commands (first admin, backup, restore, orphan cleanup), CI, Docker files for the VPS
-  route, and the engineering docs listed in the README.
-- In progress (not yet committed): the course workspace and authoring, quizzes and
-  assignments, grades and calendar, messages and discussions, administration, and the
-  catalog, profile, tools and help pages. [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md)
-  has the item-by-item state.
 
 ## Resume in a new environment
 
@@ -37,11 +39,17 @@ To start again from a clean database: `npx supabase db reset` (local only), then
 
 ## Next steps, in order
 
-1. Commit the feature areas one at a time after review; reset, reseed and run every check.
-2. Write the administrator and learner guides and the acceptance report with evidence.
-3. Open the pull request to `main` and get CI green.
-4. With the owner's accounts in place, follow [HOSTINGER_DEPLOYMENT.md](HOSTINGER_DEPLOYMENT.md)
-   and run the deployed smoke tests (AC16).
+1. The owner provides the items under "Needed from the owner" below: Hostinger access,
+   hosted Supabase projects, an SMTP sender, the domain and a support contact.
+2. Follow [HOSTINGER_DEPLOYMENT.md](HOSTINGER_DEPLOYMENT.md), run the deployed smoke
+   tests, and record the result as AC16 in [ACCEPTANCE_REPORT.md](ACCEPTANCE_REPORT.md).
+   Set the support contact in Administration → Settings.
+3. Run a manual accessibility audit (screen reader and contrast; AC14) before enrolling
+   learners who rely on assistive technology.
+4. Have the privacy, terms and accessibility pages reviewed (they are drafts; no legal
+   review has been done).
+5. Optional: add a Vietnamese interface dictionary under `src/i18n/messages/` with the
+   same keys, and its client subsets under `src/i18n/client/`.
 
 ## Needed from the owner
 
