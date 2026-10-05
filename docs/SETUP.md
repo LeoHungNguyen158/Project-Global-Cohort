@@ -97,6 +97,10 @@ record it in [OPERATIONS.md](OPERATIONS.md).
    npx supabase link --project-ref <project-ref>
    npx supabase db push          # applies supabase/migrations in order
    ```
+   Or, once `.github/workflows/db-migrate.yml` is on `main`, use **Actions → Database
+   migrations → Run workflow** (dry run first). It needs, per GitHub environment
+   (`staging`, `production`), the variable `SUPABASE_PROJECT_REF` and the secrets
+   `SUPABASE_ACCESS_TOKEN` and `SUPABASE_DB_PASSWORD`; give `production` required reviewers.
    Never run `db reset` against a hosted project. Never seed production.
 3. **Auth settings** (Dashboard → Authentication):
    - Disable new user sign-ups (accounts are created by invitation).
@@ -113,7 +117,10 @@ record it in [OPERATIONS.md](OPERATIONS.md).
 4. **Storage**: the migrations create four private buckets (`course-content`,
    `submissions`, `message-attachments`, `avatars`) and their policies. Do not make them
    public. Check the project's file size limit allows the largest configured upload
-   (lecture video: 1 GB by default in `upload_limits`).
+   (lecture video: 1 GB by default in `upload_limits`). The Free plan caps every upload at
+   50 MB, so long lecture videos need a paid plan (Pro raises the global limit, set under
+   Storage → Settings); otherwise lower the video limit in Administration → Settings so the
+   app states the real limit.
 5. **Keys**: copy the publishable key and a secret key into the hosting environment
    variables ([HOSTINGER_DEPLOYMENT.md](HOSTINGER_DEPLOYMENT.md)). The secret key bypasses
    RLS; keep it server-only and rotate it if it is ever exposed.
