@@ -331,6 +331,8 @@ async function main() {
       JSON.stringify([{ id: "a", text: "Memory/state" }, { id: "b", text: "Nothing" }]), ["a"], ""]);
     await db.query("select public.publish_quiz_version($1)", [pv]);
   });
+  // Practice quizzes give feedback but do not count toward the course total.
+  await db.query("update public.grade_items set counts_toward_total = false where quiz_id = $1", [practice]);
 
   await db.query(
     `insert into public.prerequisite_rules (offering_id, target_lesson_lineage, kind, required_lesson_lineage, quiz_id, min_score_pct, release_at) values

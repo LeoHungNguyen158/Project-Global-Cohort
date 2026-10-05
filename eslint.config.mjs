@@ -12,6 +12,11 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Local scratch work, reports and backups are never committed.
+    ".scratch/**",
+    "playwright-report/**",
+    "test-results/**",
+    "backups/**",
   ]),
 ]);
 

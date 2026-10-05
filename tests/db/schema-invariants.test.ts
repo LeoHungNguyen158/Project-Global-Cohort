@@ -104,6 +104,23 @@ describe("schema invariants", () => {
     expect(blocked).toEqual([]);
   });
 
+  it("signed-in users can execute only the private helpers that policies and their own triggers need", async () => {
+    // Policies run as the signed-in user, and so do SECURITY INVOKER guard triggers that call
+    // private.purge_allowed(). Everything else in the private schema (for example
+    // release_grade(grade, actor) or notify(user, …)) runs only inside definer functions.
+    const { rows } = await (await db()).query<{ expr: string }>(`
+      select coalesce(pg_get_expr(polqual, polrelid), '') || ' ' || coalesce(pg_get_expr(polwithcheck, polrelid), '') as expr
+      from pg_policy
+      union all
+      select p.prosrc from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+      where n.nspname in ('public', 'private') and not p.prosecdef`);
+    const needed = new Set(rows.flatMap((r) => [...r.expr.matchAll(/private\.([a-z_][a-z0-9_]*)\s*\(/g)].map((m) => m[1])));
+    const executable = await names(`
+      select p.proname as name from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+      where n.nspname = 'private' and has_function_privilege('authenticated', p.oid, 'execute')`);
+    expect(executable.filter((f) => !needed.has(f))).toEqual([]);
+  });
+
   it("every storage bucket is private and has a size limit", async () => {
     const { rows } = await (await db()).query<{ id: string; public: boolean; file_size_limit: number | null; allowed_mime_types: string[] | null }>(
       "select id, public, file_size_limit, allowed_mime_types from storage.buckets order by id",
