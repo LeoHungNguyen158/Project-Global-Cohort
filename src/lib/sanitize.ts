@@ -26,11 +26,15 @@ export function sanitizeRichText(html: string | null | undefined): string {
   return sanitizeHtml(html ?? "", OPTIONS);
 }
 
-/** Convert plain text (e.g. a textarea) to safe paragraphs. */
+function escapeHtml(text: string): string {
+  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
+/** Convert plain text (e.g. a textarea) to safe paragraphs; markup is shown literally, never dropped. */
 export function plainTextToHtml(text: string): string {
-  const escaped = sanitizeHtml(text, { allowedTags: [], allowedAttributes: {} });
-  return escaped
+  return escapeHtml(text.replace(/\r\n?/g, "\n").trim())
     .split(/\n{2,}/)
+    .filter((para) => para.trim() !== "")
     .map((para) => `<p>${para.replace(/\n/g, "<br>")}</p>`)
     .join("");
 }

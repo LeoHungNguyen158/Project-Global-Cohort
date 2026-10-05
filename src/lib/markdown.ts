@@ -12,7 +12,7 @@ const marked = new Marked({ gfm: true, breaks: true, async: false });
 export function markdownToSafeHtml(markdown: string | null | undefined): string {
   const source = (markdown ?? "").replace(/\r\n/g, "\n").trim();
   if (!source) return "";
-  return sanitizeRichText(marked.parse(source) as string);
+  return sanitizeRichText(marked.parse(source) as string).trim();
 }
 
 const turndown = new TurndownService({
