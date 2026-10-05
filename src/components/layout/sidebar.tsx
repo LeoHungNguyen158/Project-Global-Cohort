@@ -32,6 +32,7 @@ export function Sidebar({
   const [open, setOpen] = useState(false);
   const closeRef = useRef<HTMLButtonElement>(null);
   const openRef = useRef<HTMLButtonElement>(null);
+  const drawerRef = useRef<HTMLElement>(null);
 
   // The unread badge follows the server render, then refreshes every 45 s while the tab is
   // visible (GET /api/messages/poll answers only for the signed-in person).
@@ -76,6 +77,21 @@ export function Sidebar({
       if (e.key === "Escape") {
         setOpen(false);
         openRef.current?.focus();
+        return;
+      }
+      // Keep Tab inside the open drawer (it is a modal dialog).
+      if (e.key !== "Tab" || !drawerRef.current) return;
+      const items = drawerRef.current.querySelectorAll<HTMLElement>("a[href], button:not([disabled])");
+      if (items.length === 0) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      const active = document.activeElement;
+      if (e.shiftKey && (active === first || !drawerRef.current.contains(active))) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && (active === last || !drawerRef.current.contains(active))) {
+        e.preventDefault();
+        first.focus();
       }
     };
     document.addEventListener("keydown", onKey);
@@ -162,7 +178,7 @@ export function Sidebar({
       {open ? (
         <div className="fixed inset-0 z-40 lg:hidden">
           <button type="button" aria-label={t("nav.closeMenu")} tabIndex={-1} className="absolute inset-0 bg-black/50" onClick={() => setOpen(false)} />
-          <aside id="mobile-nav" role="dialog" aria-modal="true" aria-label={t("nav.primary")} className="absolute inset-y-0 left-0 w-[280px] max-w-[85vw] bg-sidebar">
+          <aside ref={drawerRef} id="mobile-nav" role="dialog" aria-modal="true" aria-label={t("nav.primary")} className="absolute inset-y-0 left-0 w-[280px] max-w-[85vw] bg-sidebar">
             {content}
           </aside>
         </div>
