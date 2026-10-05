@@ -1,0 +1,105 @@
+name: CI
+
+# Runs on every pull request and on pushes to the main and feature branches.
+# No repository secrets are used: the database, auth and storage are a throwaway
+# local Supabase stack started inside the job, and deployment is not part of CI.
+
+on:
+  pull_request:
+  push:
+    branches: [main, "feat/**"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Lint, types, unit tests, dependency audit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run test:unit
+      - name: Audit production dependencies (high and critical)
+        run: npm audit --omit=dev --audit-level=high
+
+  integration:
+    name: Database, build and browser tests
+    needs: checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      APP_ENV: development
+      APP_BASE_URL: http://localhost:3000
+      UPLOAD_SCAN_MODE: none
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+
+      - name: Start a local Supabase stack (applies every migration)
+        run: npx supabase start -x studio,imgproxy,vector,logflare,edge-runtime,supavisor,postgres-meta
+
+      - name: Point the app and tests at the local stack
+        run: |
+          npx supabase status -o env > "$RUNNER_TEMP/supabase.env"
+          set -a; . "$RUNNER_TEMP/supabase.env"; set +a
+          echo "::add-mask::$SECRET_KEY"
+          {
+            echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL"
+            echo "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$PUBLISHABLE_KEY"
+            echo "SUPABASE_SECRET_KEY=$SECRET_KEY"
+            echo "SUPABASE_DB_URL=$DB_URL"
+          } >> "$GITHUB_ENV"
+          # Sample accounts get a fresh random password for this run only.
+          pw="Ci$(openssl rand -hex 12)7"
+          echo "::add-mask::$pw"
+          echo "SEED_PASSWORD=$pw" >> "$GITHUB_ENV"
+          rm "$RUNNER_TEMP/supabase.env"
+
+      - name: Load isolated synthetic sample data
+        run: npm run seed
+
+      - name: Database permission and integrity tests (real API, RLS applies)
+        run: npm run test:db
+
+      - name: Reload sample data so browser tests start from a known state
+        run: npm run seed
+
+      - name: Production build
+        run: npm run build
+
+      - name: Install Chromium for Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Browser tests against the production build (1440, 768, 390 px)
+        run: npm run test:e2e
+
+      - name: Keep the Playwright report when tests fail (synthetic data only)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report
+            test-results
+          retention-days: 7
+
+      - name: Stop Supabase
+        if: always()
+        run: npx supabase stop --no-backup

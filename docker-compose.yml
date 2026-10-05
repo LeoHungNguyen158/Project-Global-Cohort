@@ -1,0 +1,59 @@
+# Hostinger VPS route only (docs/HOSTINGER_DEPLOYMENT.md, route B). Do not use on a
+# managed hosting plan. Supabase stays the managed data layer; no database runs here.
+#
+#   cp deploy/app.env.example deploy/app.env     # fill in on the server, never commit
+#   export APP_DOMAIN=lms.example.org             # an owner-confirmed domain
+#   export NEXT_PUBLIC_SUPABASE_URL=... NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=...
+#   docker compose up -d --build
+
+services:
+  app:
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:?set NEXT_PUBLIC_SUPABASE_URL}
+        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:?set NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY}
+    image: crew-scaler-lms:${APP_RELEASE:-latest}
+    restart: unless-stopped
+    env_file: deploy/app.env
+    # Reachable only through the reverse proxy; no host port is published.
+    expose:
+      - "3000"
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /app/.next/cache:uid=1000,gid=1000
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  proxy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:?set APP_DOMAIN to an owner-confirmed domain}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+volumes:
+  caddy_data:
+  caddy_config:

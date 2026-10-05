@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+/* Editable design tokens (proposed; not an approved Crew Scaler brand standard). */
+@theme {
+  --color-sidebar: #202326;
+  --color-sidebar-hover: #2d3135;
+  --color-sidebar-active: #000000;
+  --color-sidebar-text: #e5e7eb;
+  --color-canvas: #f7f8fa;
+  --color-panel: #ffffff;
+  --color-ink: #17212b;
+  --color-muted: #4b5563;
+  --color-subtle: #6b7280;
+  --color-line: #d8dee6;
+  --color-primary: #1d4ed8;
+  --color-primary-hover: #1e40af;
+  --color-primary-soft: #eff4ff;
+  --color-danger: #b91c1c;
+  --color-danger-soft: #fef2f2;
+  --color-success: #15803d;
+  --color-success-soft: #f0fdf4;
+  --color-warning: #a16207;
+  --color-warning-soft: #fefce8;
+  --color-focus: #2563eb;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  --radius-panel: 8px;
+}
+
+html {
+  font-size: 15.5px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  line-height: 1.55;
+}
+
+/* Visible focus for every interactive element. */
+:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.skip-link {
+  position: absolute;
+  left: 8px;
+  top: -48px;
+  z-index: 100;
+  padding: 8px 16px;
+  background: var(--color-primary);
+  color: white;
+  border-radius: 6px;
+}
+.skip-link:focus {
+  top: 8px;
+}
+
+.rich-text p { margin: 0 0 0.75em; }
+.rich-text ul { list-style: disc; padding-left: 1.5em; margin: 0 0 0.75em; }
+.rich-text ol { list-style: decimal; padding-left: 1.5em; margin: 0 0 0.75em; }
+.rich-text h2 { font-size: 1.25rem; font-weight: 600; margin: 1em 0 0.5em; }
+.rich-text h3 { font-size: 1.1rem; font-weight: 600; margin: 1em 0 0.5em; }
+.rich-text a { color: var(--color-primary); text-decoration: underline; }
+.rich-text code { background: #eef1f5; padding: 0 4px; border-radius: 4px; font-size: 0.92em; }
+.rich-text pre { background: #eef1f5; padding: 12px; border-radius: 6px; overflow-x: auto; }
+.rich-text blockquote { border-left: 4px solid var(--color-line); padding-left: 12px; color: var(--color-muted); }
+.rich-text table { border-collapse: collapse; }
+.rich-text th, .rich-text td { border: 1px solid var(--color-line); padding: 4px 8px; }
+
+dialog::backdrop {
+  background: rgb(15 23 42 / 0.5);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
