@@ -1,11 +1,14 @@
 # Hostinger deployment runbook
 
-**Current state (2026-10-05): not deployed.** Nothing has been deployed to Hostinger.
-The build had no Hostinger access, and the account's current plan (**Single Web
-Hosting**) cannot run this application (see A.1). A Supabase **staging** project exists
-(`global-cohort-staging`, ref `xzhfjijyvwhtsekwdgak`, Singapore, Free plan) with only
-the first migration applied; the rest are applied with the `Database migrations`
-workflow (SETUP.md §2). No production Supabase project exists yet. Each step below says
+**Current state (2026-10-05): not deployed.** Nothing has been deployed to Hostinger
+yet. The owner upgraded the account to **Business Web Hosting**, which supports Node.js
+web apps (see A.1). The Supabase **staging** project (`global-cohort-staging`, ref
+`xzhfjijyvwhtsekwdgak`, Singapore, Free plan) has all 18 migrations, applied with the
+`Database migrations` workflow (SETUP.md §2). No production Supabase project exists yet.
+
+Hostinger's GitHub import reads the repository's default branch (`main`). It reports
+"This repository is missing a package.json file" until the application, with
+`package.json` and `package-lock.json` at the repository root, is merged into `main`. Each step below says
 who does it and how to verify it.
 
 Target URLs: staging on Hostinger's temporary domain first, then production at
@@ -23,9 +26,11 @@ statically export the app: it needs a Node.js server for sign-in, server actions
    Web Hosting** and **Cloud** plans (Startup, Professional, Enterprise, Enterprise Plus);
    a **VPS** also works with route B below. Shared plans without Node.js web apps cannot
    run this application; do not buy or upgrade anything without deciding to.
-   The account currently has **Single Web Hosting**, which has no Node.js web apps (only
-   static files and PHP). Running the full LMS needs one of: Business Web Hosting, Cloud
-   Startup or higher, or a VPS. A static export would lose sign-in, server actions and the
+   The account was upgraded on 2026-10-05 from Single Web Hosting (no Node.js web apps)
+   to **Business Web Hosting**, which runs this app as a Node.js web app (route C). The
+   upgrade does not convert an existing PHP/HTML website: create a new Node.js web app,
+   and do not use "deploy as static" or Advanced → GIT, which copy files into
+   `public_html`. A static export would lose sign-in, server actions and the
    `/api/*` routes, so it is not an option. The plan decision is the owner's.
 2. Confirm Node.js **22.x** is offered for the app (the guide lists 18, 20, 22 and 24).
 3. URLs: Hostinger's temporary domain for staging, and `academy.crewscaler.org` for

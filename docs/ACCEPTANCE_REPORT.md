@@ -219,8 +219,9 @@ automated contrast rule. These should be done before enrolling learners who rely
 
 ### AC16. Deployment — Blocked
 
-The application is not deployed and there is no URL to test. The Hostinger account's plan
-(Single Web Hosting) cannot run a Node.js app, and no Hostinger access was available.
+The application is not deployed and there is no URL to test. The owner upgraded the
+Hostinger account to Business Web Hosting (Node.js web apps) on 2026-10-05; the Node.js app
+import waits for this branch to be merged into `main`.
 
 Hosted database, done 2026-10-05: the Supabase staging project `global-cohort-staging`
 (Singapore) has all 18 migrations, applied by the `Database migrations` workflow
