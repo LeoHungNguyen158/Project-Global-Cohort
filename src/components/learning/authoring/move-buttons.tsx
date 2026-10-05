@@ -4,7 +4,7 @@ import { ArrowDown, ArrowUp } from "lucide-react";
 import type { ActionResult } from "@/lib/errors";
 import { buttonClass } from "@/components/ui/button";
 import { submitWithoutReset } from "@/components/ui/submit-without-reset";
-import { t } from "@/i18n";
+import { t } from "@/i18n/client/learning";
 
 type Action = (prev: ActionResult<{ id?: string }> | null, formData: FormData) => Promise<ActionResult<{ id?: string }>>;
 

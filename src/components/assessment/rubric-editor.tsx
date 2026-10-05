@@ -3,7 +3,7 @@ import { useState } from "react";
 import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Textarea } from "@/components/ui/field";
-import { t } from "@/i18n";
+import { t } from "@/i18n/client/assessment";
 import { formatPoints } from "@/lib/domain/grades";
 import { RUBRIC_MAX_CRITERIA, RUBRIC_MAX_LEVELS, parseRubric, rubricTotal, shortId, validateRubric, type RubricCriterion } from "@/lib/assessment/rubric";
 import { rubricProblemText } from "@/lib/assessment/rubric-text";

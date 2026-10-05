@@ -3,7 +3,7 @@ import { useId, useMemo, useState, useSyncExternalStore } from "react";
 import { Select } from "@/components/ui/field";
 import { buttonClass } from "@/components/ui/button";
 import { canonicalTimeZone, filterTimeZones, timeZoneLabel, zoneDisplayName, type TimeZoneOption } from "./timezones";
-import { t } from "@/i18n";
+import { t } from "@/i18n/client/account";
 
 const noop = () => () => {};
 const deviceZone = () => {

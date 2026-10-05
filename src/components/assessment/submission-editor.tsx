@@ -5,7 +5,7 @@ import { saveSubmissionDraft, submitAssignmentWork, type Receipt } from "@/app/a
 import { FileUploader, type UploadedAsset } from "@/components/uploads/file-uploader";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { t } from "@/i18n";
+import { t } from "@/i18n/client/assessment";
 import { formatDateTime } from "@/lib/time";
 import { formatBytes } from "@/lib/uploads/mime";
 import type { SubmissionTypeKey } from "@/lib/assessment/assignment-status";

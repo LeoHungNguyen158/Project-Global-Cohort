@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LIST_POLL_MS, pollDelay } from "@/lib/comms/messages";
 import { scopeSignature } from "@/lib/comms/scope";
-import { t } from "@/i18n";
+import { t } from "@/i18n/client/comms";
 
 type PollBody = { unread: number; scopes?: { type: string; id: string; unread: number; threads: number }[] };
 

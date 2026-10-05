@@ -15,7 +15,7 @@ import { formatDateTime } from "@/lib/time";
 import {
   latestCursor, mergeMessages, newClientKey, pollAfter, pollDelay, THREAD_POLL_MS, timestampMicros, type ThreadMessage,
 } from "@/lib/comms/messages";
-import { t } from "@/i18n";
+import { t } from "@/i18n/client/comms";
 import { AttachmentPicker } from "./attachment-picker";
 
 type PollState = { kind: "ok" } | { kind: "error"; retryIn: number } | { kind: "signedOut" } | { kind: "gone" };

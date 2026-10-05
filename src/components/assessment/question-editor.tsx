@@ -6,7 +6,7 @@ import { Alert } from "@/components/ui/alert";
 import { buttonClass } from "@/components/ui/button";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { submitWithoutReset } from "@/components/ui/submit-without-reset";
-import { t } from "@/i18n";
+import { t } from "@/i18n/client/assessment";
 import type { ActionResult } from "@/lib/errors";
 import type { QuestionType } from "@/lib/domain/quiz";
 

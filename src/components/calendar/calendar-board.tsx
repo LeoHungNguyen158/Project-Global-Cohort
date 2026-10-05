@@ -13,7 +13,7 @@ import { submitWithoutReset } from "@/components/ui/submit-without-reset";
 import { cn } from "@/components/ui/cn";
 import { cancelEvent, deleteEvent, restoreEvent } from "@/app/actions/calendar";
 import type { ActionResult } from "@/lib/errors";
-import { t } from "@/i18n";
+import { t } from "@/i18n/client/grades";
 import { EventForm } from "./event-form";
 import type { BoardData, DayCell, DisplayItem } from "./types";
 

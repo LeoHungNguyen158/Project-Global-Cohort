@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { FileUploader } from "@/components/uploads/file-uploader";
 import { Alert } from "@/components/ui/alert";
 import { setAvatar } from "@/app/actions/profile";
-import { t } from "@/i18n";
+import { t } from "@/i18n/client/account";
 
 /**
  * Uploads a photo (purpose "avatar": verified private upload) and, once the server has

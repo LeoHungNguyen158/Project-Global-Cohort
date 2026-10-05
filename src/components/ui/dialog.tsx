@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import { X } from "lucide-react";
-import { t } from "@/i18n";
+import { t } from "@/i18n/client/core";
 
 /**
  * Accessible modal built on the native <dialog> element: focus is trapped by the

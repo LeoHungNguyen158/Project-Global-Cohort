@@ -1,4 +1,4 @@
-import { t } from "@/i18n";
+import { t } from "@/i18n/client/learning";
 import { extensionOf } from "@/lib/uploads/mime";
 
 // Lesson files: how each type is presented and which roles it may take. The

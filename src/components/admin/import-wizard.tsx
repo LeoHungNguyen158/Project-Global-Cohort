@@ -11,7 +11,7 @@ import { Button, buttonClass } from "@/components/ui/button";
 import { Checkbox, Field, Select, Textarea } from "@/components/ui/field";
 import { Dialog } from "@/components/ui/dialog";
 import { Table, td, th } from "@/components/admin/scroll-table";
-import { t } from "@/i18n";
+import { t } from "@/i18n/client/admin";
 
 export type CodeOption = { code: string; label: string };
 

@@ -9,7 +9,7 @@ import { Field, Input, Select } from "@/components/ui/field";
 import { Alert } from "@/components/ui/alert";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { submitWithoutReset } from "@/components/ui/submit-without-reset";
-import { t } from "@/i18n";
+import { t } from "@/i18n/client/learning";
 
 const ACCEPT: Record<AssetRole, string> = {
   primary: "video/mp4,video/webm,.mp4,.m4v,.webm,application/pdf,.pdf,image/png,image/jpeg,image/webp,image/gif,.png,.jpg,.jpeg,.webp,.gif",

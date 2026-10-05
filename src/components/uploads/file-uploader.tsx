@@ -7,7 +7,7 @@ import { publicEnv } from "@/lib/env";
 import { registerUpload, finalizeUpload, type UploadPurpose } from "@/app/actions/uploads";
 import { guessMime, formatBytes } from "@/lib/uploads/mime";
 import { buttonClass } from "@/components/ui/button";
-import { t } from "@/i18n";
+import { t } from "@/i18n/client/core";
 
 export type UploadedAsset = { assetId: string; filename: string; size: number; mime: string; status: "ready" | "quarantined" };
 

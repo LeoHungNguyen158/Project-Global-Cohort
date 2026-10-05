@@ -6,7 +6,7 @@ import { Alert } from "./alert";
 import { buttonClass } from "./button";
 import { SubmitButton } from "./submit-button";
 import { submitWithoutReset } from "./submit-without-reset";
-import { t } from "@/i18n";
+import { t } from "@/i18n/client/core";
 
 type Action<T> = (prev: ActionResult<T> | null, formData: FormData) => Promise<ActionResult<T>>;
 

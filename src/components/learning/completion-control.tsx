@@ -9,7 +9,7 @@ import { Alert } from "@/components/ui/alert";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { buttonClass } from "@/components/ui/button";
 import { submitWithoutReset } from "@/components/ui/submit-without-reset";
-import { t } from "@/i18n";
+import { t } from "@/i18n/client/learning";
 
 const NEEDED = Math.round(PLAYBACK_COMPLETE_RATIO * 100);
 

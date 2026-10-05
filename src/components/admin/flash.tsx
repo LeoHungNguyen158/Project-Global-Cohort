@@ -3,7 +3,7 @@ import { useEffect, useRef, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
 import { X } from "lucide-react";
 import { Alert } from "@/components/ui/alert";
-import { t } from "@/i18n";
+import { t } from "@/i18n/client/admin";
 
 export type FlashMessage = { tone: "success" | "warning" | "info" | "error"; message: string; details?: string[] };
 type Stored = FlashMessage & { id: number };

@@ -9,7 +9,7 @@ import { SubmitButton } from "@/components/ui/submit-button";
 import { submitWithoutReset } from "@/components/ui/submit-without-reset";
 import { createEvent, updateEvent } from "@/app/actions/calendar";
 import type { ActionResult } from "@/lib/errors";
-import { t } from "@/i18n";
+import { t } from "@/i18n/client/grades";
 import type { EventManage, ManageScope } from "./types";
 
 const KIND_OPTIONS = [

@@ -9,7 +9,7 @@ import { SubmitButton } from "@/components/ui/submit-button";
 import { submitWithoutReset } from "@/components/ui/submit-without-reset";
 import { requestAccess, withdrawAccessRequest } from "@/app/actions/catalog";
 import type { ActionResult } from "@/lib/errors";
-import { t } from "@/i18n";
+import { t } from "@/i18n/client/account";
 
 /**
  * Request access / request pending for one catalog entry. The same component renders

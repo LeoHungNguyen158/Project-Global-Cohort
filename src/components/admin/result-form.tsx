@@ -7,7 +7,7 @@ import { buttonClass } from "@/components/ui/button";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { submitWithoutReset } from "@/components/ui/submit-without-reset";
 import { pushFlash } from "./flash";
-import { t } from "@/i18n";
+import { t } from "@/i18n/client/admin";
 
 /**
  * Outcome details an administration action can report. Some operations succeed with

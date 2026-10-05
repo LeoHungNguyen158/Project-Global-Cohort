@@ -4,7 +4,7 @@ import { createInvitation } from "@/app/actions/admin/invitations";
 import { Field, Input, Select } from "@/components/ui/field";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { ResultForm } from "./result-form";
-import { t } from "@/i18n";
+import { t } from "@/i18n/client/admin";
 
 export type ScopeOption = { id: string; label: string };
 export type OfferingScopeOption = { id: string; label: string; cohortId: string };

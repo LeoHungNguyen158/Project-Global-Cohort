@@ -6,7 +6,7 @@ import { ActionForm } from "@/components/ui/action-form";
 import { Field, Input, Textarea } from "@/components/ui/field";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { cn } from "@/components/ui/cn";
-import { t } from "@/i18n";
+import { t } from "@/i18n/client/assessment";
 import { formatPoints } from "@/lib/domain/grades";
 import type { RubricCriterion } from "@/lib/assessment/rubric";
 

@@ -16,7 +16,7 @@ import {
   matchesQuery, matchesRoleFilter, needsGroupConfirmation, parseRoleFilter, PICKER_PAGE, type Recipient, type RoleFilter,
 } from "@/lib/comms/recipients";
 import type { ScopeType } from "@/lib/comms/scope";
-import { t, type MessageKey } from "@/i18n";
+import { t, type CommsKey as MessageKey } from "@/i18n/client/comms";
 import { AttachmentPicker } from "./attachment-picker";
 
 const ROLE_LABEL: Record<Recipient["role"], MessageKey> = {

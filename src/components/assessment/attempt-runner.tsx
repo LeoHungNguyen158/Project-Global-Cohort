@@ -7,7 +7,7 @@ import { Alert } from "@/components/ui/alert";
 import { Button, buttonClass } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { cn } from "@/components/ui/cn";
-import { t } from "@/i18n";
+import { t } from "@/i18n/client/assessment";
 import { formatDateTime, formatTime } from "@/lib/time";
 import { formatCountdown, isAnswered, remainingMs, sameResponse, type QuizResponse } from "@/lib/domain/quiz";
 import { QuestionView, type LearnerQuestion } from "./question-view";

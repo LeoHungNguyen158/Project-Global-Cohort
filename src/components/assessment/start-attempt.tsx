@@ -6,7 +6,7 @@ import { Button, buttonClass } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { submitWithoutReset } from "@/components/ui/submit-without-reset";
-import { t } from "@/i18n";
+import { t } from "@/i18n/client/assessment";
 import type { ActionResult } from "@/lib/errors";
 import { formatDateTime } from "@/lib/time";
 import { projectAttemptWindow } from "@/lib/domain/quiz";

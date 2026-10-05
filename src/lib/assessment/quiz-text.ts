@@ -1,5 +1,5 @@
 // Display helpers shared by the quiz pages (pure: safe on the server and in the browser).
-import { t } from "@/i18n";
+import { t } from "@/i18n/client/assessment";
 import { formatDateTime } from "@/lib/time";
 import { percentOf, quizWindowState, type ReviewExplanation } from "@/lib/domain/quiz";
 import { formatPoints } from "@/lib/domain/grades";

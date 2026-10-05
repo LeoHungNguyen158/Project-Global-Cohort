@@ -13,7 +13,7 @@ import {
   toWholeSeconds,
 } from "@/lib/learning/completion";
 import { buttonClass } from "@/components/ui/button";
-import { t } from "@/i18n";
+import { t } from "@/i18n/client/learning";
 
 export type VideoSource = { id: string; mime: string };
 export type CaptionTrack = { id: string; lang: string; label: string };

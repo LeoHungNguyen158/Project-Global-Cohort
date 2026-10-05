@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   Activity, BookOpen, CalendarDays, CircleUserRound, GraduationCap, LogOut, Mail, Menu, Shield, Users, Wrench, X,
 } from "lucide-react";
-import { t } from "@/i18n";
+import { t } from "@/i18n/client/core";
 
 const NAV = [
   { href: "/activity", key: "nav.activity", icon: Activity },

@@ -1,4 +1,4 @@
-import { t } from "@/i18n";
+import { t } from "@/i18n/client/core";
 
 /** Map database/RPC errors to messages safe to show users (no internals). */
 export function friendlyError(err: { message?: string; code?: string } | null | undefined, fallback = t("common.errorRetry")): string {

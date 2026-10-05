@@ -5,7 +5,7 @@ import { RotateCcw } from "lucide-react";
 import type { ActionResult } from "@/lib/errors";
 import { Alert } from "@/components/ui/alert";
 import { buttonClass } from "@/components/ui/button";
-import { t } from "@/i18n";
+import { t } from "@/i18n/client/comms";
 
 export type RedirectResult = ActionResult<{ redirectTo?: string } | unknown>;
 type Action = (prev: unknown, formData: FormData) => Promise<RedirectResult>;

@@ -12,7 +12,7 @@ import { submitWithoutReset } from "@/components/ui/submit-without-reset";
 import { cn } from "@/components/ui/cn";
 import { createGradeItem, publishGrades, saveGrade, unpublishGrade, updateGradeItem } from "@/app/actions/grades";
 import type { ActionResult } from "@/lib/errors";
-import { t, type MessageKey } from "@/i18n";
+import { t, type GradesKey as MessageKey } from "@/i18n/client/grades";
 import type { GridCell, GridItem, GridPermissions, GridRow, GridTotal } from "./gradebook-types";
 
 type Action = (prev: ActionResult | null, fd: FormData) => Promise<ActionResult>;

@@ -5,7 +5,7 @@ import { FileUploader, type UploadedAsset } from "@/components/uploads/file-uplo
 import { Alert } from "@/components/ui/alert";
 import { buttonClass } from "@/components/ui/button";
 import { formatBytes } from "@/lib/uploads/mime";
-import { t } from "@/i18n";
+import { t } from "@/i18n/client/comms";
 
 /** create_thread/send_message accept at most this many attachments per message. */
 export const MAX_ATTACHMENTS = 10;

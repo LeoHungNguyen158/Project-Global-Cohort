@@ -1,4 +1,4 @@
-import { t } from "@/i18n";
+import { t } from "@/i18n/client/assessment";
 import type { RubricProblem } from "./rubric";
 
 /** The message for a rubric validation problem (shared by the editor and the server action). */

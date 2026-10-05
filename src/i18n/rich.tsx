@@ -1,5 +1,6 @@
-import { Fragment, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { t, type MessageKey } from "./index";
+import { richText } from "./rich-text";
 
 /**
  * Translate a sentence whose placeholders are React nodes, such as a link inside the
@@ -7,10 +8,5 @@ import { t, type MessageKey } from "./index";
  * string lets a translation move the link to wherever the language needs it.
  */
 export function tRich(key: MessageKey, nodes: Record<string, ReactNode>): ReactNode {
-  return t(key)
-    .split(/(\{[A-Za-z][A-Za-z0-9]*\})/)
-    .map((part, i) => {
-      const name = /^\{([A-Za-z][A-Za-z0-9]*)\}$/.exec(part)?.[1];
-      return <Fragment key={i}>{name !== undefined && name in nodes ? nodes[name] : part}</Fragment>;
-    });
+  return richText(t(key), nodes);
 }

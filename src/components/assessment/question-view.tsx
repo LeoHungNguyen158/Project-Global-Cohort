@@ -1,7 +1,7 @@
 "use client";
 import type { ReactNode } from "react";
 import { cn } from "@/components/ui/cn";
-import { t, type MessageKey } from "@/i18n";
+import { t, type AssessmentKey as MessageKey } from "@/i18n/client/assessment";
 import { SHORT_ANSWER_MAX, type QuestionType, type QuizResponse } from "@/lib/domain/quiz";
 import { pointsLabel } from "@/lib/assessment/quiz-text";
 
