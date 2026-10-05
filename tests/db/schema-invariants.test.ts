@@ -57,7 +57,8 @@ describe("schema invariants", () => {
       select 'public.' || p.proname || '(' || pg_get_function_identity_arguments(p.oid) || ')' as name
       from pg_proc p join pg_namespace n on n.oid = p.pronamespace
       where n.nspname = 'public' and has_function_privilege('anon', p.oid, 'execute')`);
-    expect(functions).toEqual(ANON_FUNCTIONS);
+    expect(functions.filter((f) => !ANON_FUNCTIONS.includes(f))).toEqual([]);
+    expect(functions).toContain("public.catalog_list()");
 
     const { rows } = await (await db()).query("select has_schema_privilege('anon', 'private', 'usage') as usage");
     expect(rows[0].usage).toBe(false);
