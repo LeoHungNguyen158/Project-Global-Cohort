@@ -30,7 +30,10 @@ function buildCsp(nonce: string) {
     "base-uri 'self'",
     "form-action 'self'",
     "frame-ancestors 'none'",
-    ...(isDev ? [] : ["upgrade-insecure-requests"]),
+    // Only when Supabase itself is served over HTTPS: a local production build against the
+    // http://127.0.0.1 stack would otherwise have its signed media and PDF links rewritten to
+    // https and refused.
+    ...(!isDev && supabaseUrl.startsWith("https://") ? ["upgrade-insecure-requests"] : []),
   ].join("; ");
 }
 
