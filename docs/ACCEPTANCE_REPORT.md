@@ -219,8 +219,21 @@ automated contrast rule. These should be done before enrolling learners who rely
 
 ### AC16. Deployment — Blocked
 
-No Hostinger account, plan or domain, and no hosted Supabase project, were available to the
-build, so nothing was deployed and there is no URL to test. The runbook is
+The application is not deployed and there is no URL to test. The Hostinger account's plan
+(Single Web Hosting) cannot run a Node.js app, and no Hostinger access was available.
+
+Hosted database, done 2026-10-05: the Supabase staging project `global-cohort-staging`
+(Singapore) has all 18 migrations, applied by the `Database migrations` workflow
+([run 37290628919](https://github.com/LeoHungNguyen158/Project-Global-Cohort/actions/runs/37290628919),
+commit e397977). Its migration history lists the 18 versions with the same timestamps as
+`supabase/migrations`. A fingerprint of the `public` and `private` schemas matched the
+locally tested database exactly: 503 columns, 54 tables with RLS (none in `public` without
+it), 92 policies including Storage, 185 functions with their bodies and settings, 215
+function execute grants, 481 table grants, 61 triggers, 104 indexes, 341 constraints and
+4 private buckets. The security advisor reports the expected design: one table with RLS and
+no policy (`notification_outbox`, server-only), and SECURITY DEFINER RPCs that check the
+caller's role inside the function (two of them, `catalog_list` and `public_site_settings`,
+are callable signed out by design). No production Supabase project exists yet. The runbook is
 [HOSTINGER_DEPLOYMENT.md](HOSTINGER_DEPLOYMENT.md); after deployment, run its smoke tests
 (sign in, reset callback, private routes, file upload and download, quiz submission, grade
 release) and record the URL, commit and date here.
