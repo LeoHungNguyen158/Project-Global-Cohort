@@ -46,10 +46,25 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      - name: Link the project
-        run: npx supabase link --project-ref "${{ vars.SUPABASE_PROJECT_REF }}"
+      # GitHub-hosted runners have no IPv6, and the project's direct database host is
+      # IPv6-only, so connect through the project's IPv4 connection pooler (session mode).
+      - name: Resolve the pooler connection
+        env:
+          PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+        run: |
+          pooler=$(curl -fsS -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+            "https://api.supabase.com/v1/projects/$PROJECT_REF/config/database/pooler")
+          host=$(jq -r '(map(select(.database_type == "PRIMARY")) + .)[0].db_host' <<<"$pooler")
+          user=$(jq -r '(map(select(.database_type == "PRIMARY")) + .)[0].db_user' <<<"$pooler")
+          if [ -z "$host" ] || [ "$host" = null ]; then echo "No pooler found for $PROJECT_REF" >&2; exit 1; fi
+          password=$(jq -rn --arg p "$SUPABASE_DB_PASSWORD" '$p | @uri')
+          url="postgresql://$user:$password@$host:5432/postgres"
+          echo "::add-mask::$password"
+          echo "::add-mask::$url"
+          echo "DB_URL=$url" >> "$GITHUB_ENV"
+          echo "Pooler: $host (user $user)"
       - name: Migrations that would be applied
-        run: npx supabase db push --dry-run
+        run: npx supabase db push --dry-run --db-url "$DB_URL"
       - name: Apply migrations
         if: ${{ !inputs.dry_run }}
-        run: npx supabase db push --yes
+        run: npx supabase db push --yes --db-url "$DB_URL"
