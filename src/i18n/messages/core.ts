@@ -224,6 +224,7 @@ export const core = {
   "common.uploadCouldNotVerify": "Could not verify the upload.",
   "common.uploadFileRejected": "The file was rejected.",
   "common.sessionEnded": "Your session ended. Sign in again.",
+  "common.markdownHelp": "Formatting: **bold**, *italic*, - bullet lists, 1. numbered lists, ## headings, [link text](https://…).",
   "common.uploadUnknownType": "Unknown upload type.",
   "common.uploadBadName": "Invalid file name.",
   "common.uploadEmpty": "The file is empty.",

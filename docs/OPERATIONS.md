@@ -97,9 +97,11 @@ database; the commands above are the independent copy and the only copy of the f
   administrator releases it in Administration → Uploads; use it if the program's policy
   requires human review until a scanning service is added.
 - **Orphaned files**: `npm run maintenance:orphans` reports storage objects without a file
-  record, bytes still stored for rejected or deleted records, and uploads left pending for
-  more than 24 hours (report only by default). `--apply` deletes those bytes and marks the
-  unfinished uploads rejected; file records, submissions and grades are kept.
+  record, bytes still stored for rejected or deleted records, uploads left pending for
+  more than 24 hours, and profile photos that were replaced or removed more than 24 hours
+  ago (report only by default). `--apply` deletes those bytes, marks the unfinished uploads
+  rejected and the old photos deleted; file records, submissions and grades are kept. Run
+  it weekly.
 - Video is played from private storage through 5-minute signed links that are re-issued
   after an access check. A signed link works for anyone who has it until it expires; this is
   access control, not DRM.

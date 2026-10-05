@@ -5,7 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 import { safeNextPath } from "@/lib/safe-redirect";
 import { serverEnv } from "@/lib/env";
 import type { ActionResult } from "@/lib/errors";
-import { t } from "@/i18n";
+import { t, type MessageKey } from "@/i18n";
+import { passwordProblem, type PasswordStrengthProblem } from "@/lib/password";
 
 export async function signOut() {
   const supabase = await createClient();
@@ -44,21 +45,23 @@ export async function requestPasswordReset(_prev: ActionResult<unknown> | null, 
   return { ok: true, message: t("auth.resetSent") };
 }
 
-const passwordSchema = z
-  .string()
-  .min(10, t("auth.pwMin"))
-  .max(200)
-  .regex(/[A-Za-z]/, t("auth.pwLetter"))
-  .regex(/[0-9]/, t("auth.pwNumber"));
+const PASSWORD_MESSAGES = {
+  tooShort: "auth.pwMin",
+  tooLong: "auth.pwInvalid",
+  letter: "auth.pwLetter",
+  number: "auth.pwNumber",
+} as const satisfies Record<PasswordStrengthProblem, MessageKey>;
 
 export async function updatePassword(_prev: ActionResult<unknown> | null, formData: FormData): Promise<ActionResult<unknown>> {
-  const pw = passwordSchema.safeParse(formData.get("password"));
-  if (!pw.success) return { ok: false, error: pw.error.issues[0]?.message ?? t("auth.pwInvalid") };
+  const raw = formData.get("password");
+  const password = typeof raw === "string" ? raw : "";
+  const problem = passwordProblem(password);
+  if (problem) return { ok: false, error: t(PASSWORD_MESSAGES[problem]) };
   if (formData.get("password") !== formData.get("confirm")) return { ok: false, error: t("auth.pwMismatch") };
   const supabase = await createClient();
   const { data } = await supabase.auth.getUser();
   if (!data.user) return { ok: false, error: t("auth.linkInvalid") };
-  const { error } = await supabase.auth.updateUser({ password: pw.data });
+  const { error } = await supabase.auth.updateUser({ password });
   if (error) return { ok: false, error: error.message.includes("different") ? t("auth.pwSame") : t("auth.pwFailed") };
   const next = safeNextPath(String(formData.get("next") ?? ""), "/activity");
   redirect(`${next}${next.includes("?") ? "&" : "?"}password_updated=1`);

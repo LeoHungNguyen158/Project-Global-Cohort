@@ -10,7 +10,7 @@ if curl -s -o /dev/null -m 5 http://localhost:3000/api/health; then
   echo "dev server already running"
   exit 0
 fi
-nohup npx next dev -p 3000 > .scratch/dev-server.log 2>&1 &
+nohup npx next dev -p 3000 > .scratch/dev-server.log 2>&1 9>&- &
 for i in $(seq 1 60); do
   if curl -s -o /dev/null -m 5 http://localhost:3000/api/health; then
     echo "dev server started"

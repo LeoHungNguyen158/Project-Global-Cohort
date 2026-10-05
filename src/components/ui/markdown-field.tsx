@@ -1,5 +1,6 @@
 import { Field, Textarea } from "./field";
 import { htmlToMarkdown } from "@/lib/markdown";
+import { t } from "@/i18n";
 
 /**
  * Rich text entry as Markdown. The stored value is sanitized HTML; this field shows it
@@ -25,7 +26,7 @@ export function MarkdownField({
   maxLength?: number;
 }) {
   const id = `md-${name}`;
-  const help = "Formatting: **bold**, *italic*, - bullet lists, 1. numbered lists, ## headings, [link text](https://…).";
+  const help = t("common.markdownHelp");
   return (
     <Field label={label} htmlFor={id} hint={hint ? `${hint} ${help}` : help} required={required} error={error}>
       <Textarea id={id} name={name} rows={rows} defaultValue={htmlToMarkdown(html)} required={required} maxLength={maxLength} aria-describedby={`${id}-hint`} />
