@@ -72,6 +72,7 @@ Backups, monitoring, releases and incidents: [docs/OPERATIONS.md](docs/OPERATION
 | [docs/HANDOFF.md](docs/HANDOFF.md) | Where to pick up the work |
 | [docs/ADMIN_GUIDE.md](docs/ADMIN_GUIDE.md) | Program administrators and instructors |
 | [docs/LEARNER_GUIDE.md](docs/LEARNER_GUIDE.md) | Participants |
+| [docs/STAGING_TEST_GUIDE.md](docs/STAGING_TEST_GUIDE.md) | Owner: trying staging as administrator and participant |
 | [docs/SETUP.md](docs/SETUP.md) | Local development and Supabase project setup |
 | [docs/HOSTINGER_DEPLOYMENT.md](docs/HOSTINGER_DEPLOYMENT.md) | Deploying to Hostinger, verification, rollback |
 | [docs/OPERATIONS.md](docs/OPERATIONS.md) | Backups, monitoring, uploads, accounts, incidents |

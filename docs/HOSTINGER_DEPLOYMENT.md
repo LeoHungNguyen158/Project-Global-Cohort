@@ -1,9 +1,16 @@
 # Hostinger deployment runbook
 
-**Current state: not deployed.** No Hostinger account access, plan details, domain, or
-Supabase project credentials were available to this build, so nothing has been deployed
-to staging or production. The repository contains a deployable application and this
-runbook. Each step below says who does it and how to verify it.
+**Current state (2026-10-05): not deployed.** Nothing has been deployed to Hostinger.
+The build had no Hostinger access, and the account's current plan (**Single Web
+Hosting**) cannot run this application (see A.1). A Supabase **staging** project exists
+(`global-cohort-staging`, ref `xzhfjijyvwhtsekwdgak`, Singapore, Free plan) with only
+the first migration applied; the rest are applied with the `Database migrations`
+workflow (SETUP.md §2). No production Supabase project exists yet. Each step below says
+who does it and how to verify it.
+
+Target URLs: staging on Hostinger's temporary domain first, then production at
+**`academy.crewscaler.org`**. The `crewscaler.org` website stays on Squarespace, and its
+email records are not changed (section F).
 
 The web application runs on Hostinger. Data, authentication and files stay in Supabase
 (see [ARCHITECTURE.md](ARCHITECTURE.md)). Do not substitute another host, and do not
@@ -16,10 +23,13 @@ statically export the app: it needs a Node.js server for sign-in, server actions
    Web Hosting** and **Cloud** plans (Startup, Professional, Enterprise, Enterprise Plus);
    a **VPS** also works with route B below. Shared plans without Node.js web apps cannot
    run this application; do not buy or upgrade anything without deciding to.
+   The account currently has **Single Web Hosting**, which has no Node.js web apps (only
+   static files and PHP). Running the full LMS needs one of: Business Web Hosting, Cloud
+   Startup or higher, or a VPS. A static export would lose sign-in, server actions and the
+   `/api/*` routes, so it is not an option. The plan decision is the owner's.
 2. Confirm Node.js **22.x** is offered for the app (the guide lists 18, 20, 22 and 24).
-3. Decide the URL: Hostinger's temporary domain for staging, and an owner-controlled
-   subdomain (for example `lms.<your domain>`) for production. Do not point the
-   organization's main site at this app.
+3. URLs: Hostinger's temporary domain for staging, and `academy.crewscaler.org` for
+   production. Do not point `crewscaler.org` or `www` at this app.
 4. Create the Supabase projects (staging and production) and apply migrations as in
    [SETUP.md §2](SETUP.md#2-hosted-supabase-project-staging-and-production).
 
@@ -89,13 +99,19 @@ secret with `NEXT_PUBLIC_`.
 
 ## F. Domain and HTTPS
 
-1. Add the domain or subdomain to the website in hPanel and create exactly the DNS records
-   hPanel shows (do not guess an IP address). Check propagation with
-   `dig +short <host>` before continuing.
-2. Enable the free SSL certificate in hPanel and confirm `https://` loads without warnings.
-3. Update Supabase Auth: Site URL and Redirect URLs to the final `https://` origin, and set
+1. Add `academy.crewscaler.org` to the website in hPanel. hPanel then shows the record to
+   create (an A record with an IP address, or a CNAME); do not guess the value.
+2. Create that **one** record where `crewscaler.org`'s DNS is managed (if the domain is
+   with Squarespace: Squarespace → Domains → crewscaler.org → DNS → Custom records), with
+   host `academy`. Do not change nameservers, and do not edit or delete existing records:
+   the `@` and `www` records keep the Squarespace site, and the `MX`, `SPF`/`TXT`,
+   `DKIM` and `DMARC` records keep the email working. Check with
+   `dig +short academy.crewscaler.org` and confirm `dig +short MX crewscaler.org` is
+   unchanged.
+3. Enable the free SSL certificate in hPanel and confirm `https://` loads without warnings.
+4. Update Supabase Auth: Site URL and Redirect URLs to the final `https://` origin, and set
    `APP_BASE_URL` to the same origin. Re-test invitation and password-reset links.
-4. If Hostinger's CDN is enabled, confirm it does not cache personalized pages: sign in as
+5. If Hostinger's CDN is enabled, confirm it does not cache personalized pages: sign in as
    two different users in two browsers and check each sees only their own name, courses and
    grades, and that signed-in responses carry `Cache-Control: private, no-store`.
 
