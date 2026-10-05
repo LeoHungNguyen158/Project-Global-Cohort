@@ -62,6 +62,16 @@ for GitHub Actions**. So production must follow a branch that only moves after C
 3. Framework: Next.js (auto-detected). Node.js version: **22.x**. If the form asks:
    install `npm ci`, build `npm run build`, start `npm run start`, output directory `.next`.
    `next start` listens on the `PORT` the platform provides.
+   Keep the build command as `npm run build`: it runs `next build --webpack`. Hostinger's
+   build image has a glibc older than 2.29, so Next.js cannot load its native SWC binary
+   and falls back to WebAssembly (the build log shows `Attempted to load
+   @next/swc-linux-x64-gnu ... GLIBC_2.29 not found` warnings; they are expected).
+   Turbopack needs the native binary, so a plain `next build` fails there; webpack works
+   with the WebAssembly fallback. The config is `next.config.mjs` (plain JavaScript) for
+   the same reason: a `next.config.ts` has to be compiled first, and that failed on
+   Hostinger (`Failed to load next.config.ts ... ERR_MODULE_NOT_FOUND`). This was
+   reproduced and verified in an AlmaLinux 8 container (glibc 2.28): `npm ci`,
+   `npm run build`, `npm run start`, `/api/health` and the sign-in redirect all worked.
 4. Add the environment variables in section D **before the first build**: `NEXT_PUBLIC_*`
    values are compiled into the browser bundle, so changing them later requires a rebuild.
    Do not use the database connection wizard to paste a database password into the app;
