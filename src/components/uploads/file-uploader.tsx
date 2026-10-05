@@ -43,6 +43,7 @@ export function FileUploader({
   hint,
   initial = [],
   onUploaded,
+  onRemoved,
   disabled,
 }: {
   purpose: UploadPurpose;
@@ -56,6 +57,8 @@ export function FileUploader({
   hint?: string;
   initial?: UploadedAsset[];
   onUploaded?: (asset: UploadedAsset) => void;
+  /** Called when the person removes a finished upload from this form (the stored file stays private and unattached). */
+  onRemoved?: (assetId: string) => void;
   disabled?: boolean;
 }) {
   const inputId = useId();
@@ -138,11 +141,21 @@ export function FileUploader({
       return;
     }
     const status = fin.data.status === "quarantined" ? "quarantined" : "ready";
-    update(key, { state: { phase: status } });
+    update(key, { state: { phase: status }, assetId });
     const asset: UploadedAsset = { assetId, filename: file.name, size: file.size, mime, status };
     setDone((prev) => (multiple ? [...prev, asset] : [asset]));
     setAnnouncement(t(status === "ready" ? "common.uploadSaidDone" : "common.uploadSaidHeld", { name: file.name }));
     onUploaded?.(asset);
+  }
+
+  const canRemove = Boolean(name || onRemoved);
+  function remove(it: Item) {
+    if (!it.assetId) return;
+    const assetId = it.assetId;
+    setItems((prev) => prev.filter((i) => i.key !== it.key));
+    setDone((prev) => prev.filter((a) => a.assetId !== assetId));
+    setAnnouncement(t("common.uploadSaidRemoved", { name: it.file.name }));
+    onRemoved?.(assetId);
   }
 
   function onFiles(list: FileList | null) {
@@ -189,6 +202,11 @@ export function FileUploader({
                   {it.state.phase === "uploading" && it.abort ? (
                     <button type="button" className={buttonClass("ghost", "sm")} onClick={() => it.abort?.()}>
                       <X aria-hidden="true" className="h-4 w-4" /> {t("common.cancel")}
+                    </button>
+                  ) : null}
+                  {canRemove && it.assetId && (it.state.phase === "ready" || it.state.phase === "quarantined") ? (
+                    <button type="button" className={buttonClass("ghost", "sm")} onClick={() => remove(it)} aria-label={t("common.uploadRemoveNamed", { name: it.file.name })}>
+                      <X aria-hidden="true" className="h-4 w-4" /> {t("common.uploadRemove")}
                     </button>
                   ) : null}
                   {it.state.phase === "error" || it.state.phase === "canceled" ? (

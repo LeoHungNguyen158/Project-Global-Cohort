@@ -19,7 +19,7 @@ const NAV = [
 
 export function Sidebar({
   displayName,
-  unreadMessages,
+  unreadMessages: unreadFromServer,
   showAdmin,
   signOutAction,
 }: {
@@ -32,6 +32,36 @@ export function Sidebar({
   const [open, setOpen] = useState(false);
   const closeRef = useRef<HTMLButtonElement>(null);
   const openRef = useRef<HTMLButtonElement>(null);
+
+  // The unread badge follows the server render, then refreshes every 45 s while the tab is
+  // visible (GET /api/messages/poll answers only for the signed-in person).
+  const [unreadMessages, setUnread] = useState(unreadFromServer);
+  const [lastServerUnread, setLastServerUnread] = useState(unreadFromServer);
+  if (unreadFromServer !== lastServerUnread) {
+    setLastServerUnread(unreadFromServer);
+    setUnread(unreadFromServer);
+  }
+  useEffect(() => {
+    let stopped = false;
+    const check = async () => {
+      if (document.visibilityState !== "visible") return;
+      try {
+        const res = await fetch("/api/messages/poll", { cache: "no-store", credentials: "same-origin" });
+        if (!res.ok) return;
+        const body = (await res.json()) as { unread?: unknown };
+        if (!stopped && typeof body.unread === "number") setUnread(body.unread);
+      } catch {
+        // Offline or signed out: keep the last known count.
+      }
+    };
+    const timer = window.setInterval(check, 45_000);
+    document.addEventListener("visibilitychange", check);
+    return () => {
+      stopped = true;
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", check);
+    };
+  }, []);
 
   // Close the drawer after navigation (state adjusted during render, not in an effect).
   const [lastPath, setLastPath] = useState(pathname);

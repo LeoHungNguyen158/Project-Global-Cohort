@@ -239,6 +239,9 @@ export const core = {
   "common.uploadSaidRejected": "{name}: rejected. {reason}",
   "common.uploadSaidDone": "{name} uploaded",
   "common.uploadSaidHeld": "{name} uploaded and held for review",
+  "common.uploadSaidRemoved": "{name} removed",
+  "common.uploadRemove": "Remove",
+  "common.uploadRemoveNamed": "Remove {name}",
 
   "auth.signedOut": "You have signed out.",
   "auth.forgotMeta": "Forgot password",

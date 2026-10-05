@@ -8,6 +8,7 @@ import { t } from "@/i18n";
  */
 export function MarkdownField({
   name,
+  id: idProp,
   label,
   html,
   rows = 8,
@@ -17,6 +18,8 @@ export function MarkdownField({
   maxLength = 50000,
 }: {
   name: string;
+  /** Needed when several forms on one page use the same field name. */
+  id?: string;
   label: string;
   html?: string | null;
   rows?: number;
@@ -25,7 +28,7 @@ export function MarkdownField({
   error?: string;
   maxLength?: number;
 }) {
-  const id = `md-${name}`;
+  const id = idProp ?? `md-${name}`;
   const help = t("common.markdownHelp");
   return (
     <Field label={label} htmlFor={id} hint={hint ? `${hint} ${help}` : help} required={required} error={error}>
