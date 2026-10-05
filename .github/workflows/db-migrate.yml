@@ -1,0 +1,55 @@
+name: Database migrations
+
+# Applies supabase/migrations to a hosted Supabase project. Runs only when started by hand
+# (Actions → Database migrations → Run workflow), never on pushes or pull requests, so
+# untrusted pull requests never see these secrets.
+#
+# One-time setup by the owner (Settings → Environments): create the environments
+# "staging" and "production"; give "production" required reviewers. In each environment
+# add the variable SUPABASE_PROJECT_REF and the secrets SUPABASE_ACCESS_TOKEN (a personal
+# access token from the Supabase dashboard) and SUPABASE_DB_PASSWORD (the project's
+# database password). See docs/HOSTINGER_DEPLOYMENT.md.
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Which Supabase project to migrate
+        type: choice
+        options: [staging, production]
+        default: staging
+      dry_run:
+        description: Only list the migrations that would be applied
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: db-migrate-${{ inputs.target }}
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    name: Migrate ${{ inputs.target }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: ${{ inputs.target }}
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Link the project
+        run: npx supabase link --project-ref "${{ vars.SUPABASE_PROJECT_REF }}"
+      - name: Migrations that would be applied
+        run: npx supabase db push --dry-run
+      - name: Apply migrations
+        if: ${{ !inputs.dry_run }}
+        run: npx supabase db push --yes
