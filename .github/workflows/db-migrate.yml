@@ -52,14 +52,37 @@ jobs:
         env:
           PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
         run: |
-          pooler=$(curl -fsS -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
-            "https://api.supabase.com/v1/projects/$PROJECT_REF/config/database/pooler")
-          host=$(jq -r '(map(select(.database_type == "PRIMARY")) + .)[0].db_host' <<<"$pooler")
-          user=$(jq -r '(map(select(.database_type == "PRIMARY")) + .)[0].db_user' <<<"$pooler")
-          if [ -z "$host" ] || [ "$host" = null ]; then echo "No pooler found for $PROJECT_REF" >&2; exit 1; fi
+          user="postgres.$PROJECT_REF"
+          candidates=""
+          # Ask the Management API for the project's pooler host. Some access tokens are
+          # refused here (HTTP 403), so fall back to the shared pooler hosts of the
+          # project's region and keep the first one that accepts the login.
+          status=$(curl -sS -o pooler.json -w '%{http_code}' -A supabase-db-migrate \
+            -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+            "https://api.supabase.com/v1/projects/$PROJECT_REF/config/database/pooler" || true)
+          if [ "$status" = 200 ]; then
+            candidates=$(jq -r '(map(select(.database_type == "PRIMARY")) + .)[0].db_host // empty' pooler.json)
+          else
+            echo "Pooler lookup returned HTTP $status; trying the region's shared pooler hosts."
+          fi
+          region=$(curl -sS -A supabase-db-migrate -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+            "https://api.supabase.com/v1/projects/$PROJECT_REF" | jq -r '.region // empty' || true)
+          region=${region:-${{ vars.SUPABASE_REGION || 'ap-southeast-1' }}}
+          candidates="$candidates aws-1-$region.pooler.supabase.com aws-0-$region.pooler.supabase.com"
+          rm -f pooler.json
+          host=""
+          for h in $candidates; do
+            if PGPASSWORD="$SUPABASE_DB_PASSWORD" PGCONNECT_TIMEOUT=10 psql -h "$h" -p 5432 -U "$user" \
+                 -d "dbname=postgres sslmode=require" -Atqc 'select 1' >/dev/null 2>psql.err; then
+              host=$h; break
+            fi
+            echo "$h: $(head -c 200 psql.err)"
+          done
+          rm -f psql.err
+          if [ -z "$host" ]; then echo "Could not log in through any pooler host." >&2; exit 1; fi
           password=$(jq -rn --arg p "$SUPABASE_DB_PASSWORD" '$p | @uri')
-          url="postgresql://$user:$password@$host:5432/postgres"
           echo "::add-mask::$password"
+          url="postgresql://$user:$password@$host:5432/postgres"
           echo "::add-mask::$url"
           echo "DB_URL=$url" >> "$GITHUB_ENV"
           echo "Pooler: $host (user $user)"
