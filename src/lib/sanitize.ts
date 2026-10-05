@@ -9,7 +9,8 @@ const OPTIONS: sanitizeHtml.IOptions = {
     "p", "br", "strong", "b", "em", "i", "u", "s", "blockquote", "code", "pre",
     "ul", "ol", "li", "h2", "h3", "h4", "a", "hr", "table", "thead", "tbody", "tr", "th", "td",
   ],
-  allowedAttributes: { a: ["href", "title"], th: ["scope"], td: ["colspan", "rowspan"] },
+  // rel/target are listed so the link transform below survives filtering; their values are always overwritten.
+  allowedAttributes: { a: ["href", "title", "rel", "target"], th: ["scope"], td: ["colspan", "rowspan"] },
   allowedSchemes: ["https", "mailto"],
   allowProtocolRelative: false,
   disallowedTagsMode: "discard",

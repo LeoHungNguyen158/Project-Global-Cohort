@@ -25,7 +25,7 @@ function buildCsp(nonce: string) {
     `media-src 'self' blob: ${supabaseUrl}`,
     `connect-src 'self' ${supabaseUrl}`,
     "font-src 'self'",
-    `frame-src https://www.youtube-nocookie.com https://player.vimeo.com ${supabaseUrl}`,
+    `frame-src 'self' https://www.youtube-nocookie.com https://player.vimeo.com ${supabaseUrl}`,
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",

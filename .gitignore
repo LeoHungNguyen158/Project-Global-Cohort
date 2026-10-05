@@ -55,3 +55,6 @@ deploy-state/
 *.sql.gz
 
 .DS_Store
+
+# local scratch scripts
+/.scratch/

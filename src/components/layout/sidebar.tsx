@@ -33,7 +33,12 @@ export function Sidebar({
   const closeRef = useRef<HTMLButtonElement>(null);
   const openRef = useRef<HTMLButtonElement>(null);
 
-  useEffect(() => setOpen(false), [pathname]);
+  // Close the drawer after navigation (state adjusted during render, not in an effect).
+  const [lastPath, setLastPath] = useState(pathname);
+  if (pathname !== lastPath) {
+    setLastPath(pathname);
+    setOpen(false);
+  }
   useEffect(() => {
     if (!open) return;
     closeRef.current?.focus();

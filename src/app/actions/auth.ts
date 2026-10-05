@@ -19,12 +19,12 @@ export async function signIn(_prev: ActionResult<unknown> | null, formData: Form
   const parsed = loginSchema.safeParse({ email: formData.get("email"), password: formData.get("password") });
   if (!parsed.success) return { ok: false, error: "Enter your email address and password." };
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword(parsed.data);
-  if (error) {
-    if (error.status === 429) return { ok: false, error: "Too many sign-in attempts. Please wait and try again." };
+  const { data: signedIn, error } = await supabase.auth.signInWithPassword(parsed.data);
+  if (error || !signedIn.user) {
+    if (error?.status === 429) return { ok: false, error: "Too many sign-in attempts. Please wait and try again." };
     return { ok: false, error: t("auth.invalid") };
   }
-  const { data: profile } = await supabase.from("profiles").select("suspended_at").single();
+  const { data: profile } = await supabase.from("profiles").select("suspended_at").eq("id", signedIn.user.id).maybeSingle();
   if (!profile || profile.suspended_at) {
     await supabase.auth.signOut();
     return { ok: false, error: t("auth.inactive") };

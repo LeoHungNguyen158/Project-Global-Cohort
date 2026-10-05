@@ -58,7 +58,7 @@ export async function listStaff(offeringIds: string[]): Promise<Record<string, S
   const supabase = await createClient();
   const { data } = await supabase
     .from("staff_assignments")
-    .select("offering_id, user_id, role, profiles(display_name)")
+    .select("offering_id, user_id, role, profiles!staff_assignments_user_id_fkey(display_name)")
     .in("offering_id", offeringIds);
   const out: Record<string, StaffRow[]> = {};
   for (const row of (data ?? []) as unknown as (StaffRow & { offering_id: string })[]) {
