@@ -45,7 +45,8 @@ export async function registerUpload(input: {
 
 /** Reads at most `limit` bytes from the start of a stored object without downloading it all. */
 async function readHead(url: string, limit = 4096): Promise<Uint8Array> {
-  const res = await fetch(url, { headers: { Range: `bytes=0-${limit - 1}` }, cache: "no-store" });
+  const controller = new AbortController();
+  const res = await fetch(url, { headers: { Range: `bytes=0-${limit - 1}` }, cache: "no-store", signal: controller.signal });
   if (!res.ok || !res.body) throw new Error(`read failed: ${res.status}`);
   const reader = res.body.getReader();
   const chunks: Uint8Array[] = [];
@@ -56,7 +57,9 @@ async function readHead(url: string, limit = 4096): Promise<Uint8Array> {
     chunks.push(value);
     total += value.length;
   }
-  await reader.cancel().catch(() => undefined);
+  // Abort rather than reader.cancel(): cancelling a partly read body never settles in the
+  // Next.js server runtime, which left every upload over 4 KB stuck at "Checking file…".
+  controller.abort();
   const out = new Uint8Array(Math.min(total, limit));
   let offset = 0;
   for (const c of chunks) {

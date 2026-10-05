@@ -112,7 +112,7 @@ export function FileUploader({
           upload.start();
         });
       } else {
-        const { error } = await supabase.storage.from(bucket).upload(objectPath, file, { contentType: mime, upsert: false });
+        const { error } = await supabase.storage.from(bucket).upload(objectPath, file.slice(0, file.size, mime), { contentType: mime, upsert: false });
         if (error) throw new Error(error.message);
       }
     } catch (err) {
