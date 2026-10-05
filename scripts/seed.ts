@@ -336,8 +336,9 @@ async function main() {
     `insert into public.prerequisite_rules (offering_id, target_lesson_lineage, kind, required_lesson_lineage, quiz_id, min_score_pct, release_at) values
      ($1, $2, 'lesson_complete', $3, null, null, null),
      ($1, $4, 'quiz_min_score', null, $5, 70, null),
-     ($1, $6, 'release_at', null, null, null, $7)`,
-    [aaf, L("l5"), L("l3"), L("l7"), quiz1, L("l8"), iso(14)],
+     ($1, $6, 'release_at', null, null, null, $7),
+     ($1, $8, 'lesson_complete', $2, null, null, null)`,
+    [aaf, L("l5"), L("l3"), L("l7"), quiz1, L("l8"), iso(14), L("l6")],
   );
   await db.query("insert into public.quiz_accommodations (quiz_id, user_id, extra_minutes, note, granted_by) values ($1, $2, 10, 'Sample accommodation', $3)",
     [quiz1, P("p3"), P("mai")]);
@@ -361,7 +362,7 @@ async function main() {
 
   console.log("Learner activity through the real RPCs…");
   // Progress
-  for (const [k, lessons] of [["p1", ["l1", "l2", "l3", "l5"]], ["p2", ["l1"]], ["daniel", ["l1", "l2"]]] as const) {
+  for (const [k, lessons] of [["p1", ["l1", "l2", "l3", "l5", "l6"]], ["p2", ["l1"]], ["daniel", ["l1", "l2"]]] as const) {
     await asUser(db, P(k), async () => {
       for (const l of lessons) {
         if (l === "l3") await db.query("select public.mark_lesson_progress($1, $2, 20, 20, false)", [aaf, aafV1.lessonIds.l3]);

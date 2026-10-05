@@ -563,12 +563,15 @@ begin
   if not found or a.user_id <> uid then
     raise exception 'Attempt not found' using errcode = '42501';
   end if;
+  -- Not raised as errors: an expiry must persist the finalization (a raise would roll it back).
   if a.status <> 'in_progress' then
-    raise exception 'This attempt is already submitted; the answer was not saved' using errcode = 'P0410';
+    return jsonb_build_object('ok', false, 'reason', 'submitted',
+      'message', 'This attempt is already submitted; the answer was not saved.');
   end if;
   if a.deadline_at is not null and now() >= a.deadline_at then
     perform private.finalize_attempt(a.id, 'expired');
-    raise exception 'Time is up; this answer was not saved. Your earlier saved answers were submitted.' using errcode = 'P0410';
+    return jsonb_build_object('ok', false, 'reason', 'expired',
+      'message', 'Time is up; this answer was not saved. Your earlier saved answers were submitted.');
   end if;
   select * into q from public.questions where id = p_question and quiz_version_id = a.quiz_version_id;
   if not found then raise exception 'Question is not part of this attempt'; end if;
@@ -598,7 +601,7 @@ begin
   values (a.id, q.id, coalesce(p_response, 'null'::jsonb), now())
   on conflict (attempt_id, question_id) do update set response = excluded.response, saved_at = excluded.saved_at
   returning saved_at into saved;
-  return jsonb_build_object('saved_at', saved, 'deadline_at', a.deadline_at, 'server_now', now());
+  return jsonb_build_object('ok', true, 'saved_at', saved, 'deadline_at', a.deadline_at, 'server_now', now());
 end $$;
 
 create or replace function public.submit_quiz_attempt(p_attempt uuid) returns jsonb
