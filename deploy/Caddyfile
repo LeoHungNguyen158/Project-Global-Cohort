@@ -1,0 +1,18 @@
+# HTTPS reverse proxy for the VPS route. Caddy obtains and renews the certificate for
+# APP_DOMAIN automatically once its DNS record points at this server.
+# Responses are not cached here; the app marks signed-in pages private, no-store.
+
+{$APP_DOMAIN} {
+	encode zstd gzip
+
+	reverse_proxy app:3000
+
+	header {
+		-Server
+	}
+
+	log {
+		output stdout
+		format json
+	}
+}

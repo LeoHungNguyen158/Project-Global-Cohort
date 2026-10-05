@@ -19,6 +19,9 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // The Docker image (VPS route) builds a self-contained server; managed Node.js
+  // hosting uses the default output with `npm run start`.
+  ...(process.env.NEXT_OUTPUT === "standalone" ? { output: "standalone" as const } : {}),
   // Server Actions carry form fields only; files go directly to private storage.
   experimental: {
     serverActions: { bodySizeLimit: "2mb", ...(allowedOrigins.length ? { allowedOrigins } : {}) },

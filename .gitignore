@@ -17,9 +17,10 @@
 *.tsbuildinfo
 next-env.d.ts
 
-# env files: only the placeholder template is tracked
+# env files: only the placeholder templates are tracked
 .env*
 !.env.example
+deploy/*.env
 
 # logs
 npm-debug.log*
