@@ -16,7 +16,10 @@
     "db:reset": "supabase db reset",
     "seed": "tsx scripts/seed.ts",
     "admin:bootstrap": "tsx scripts/bootstrap-admin.ts",
-    "maintenance:orphans": "tsx scripts/cleanup-orphans.ts"
+    "maintenance:orphans": "tsx scripts/cleanup-orphans.ts",
+    "backup:storage": "tsx scripts/storage-backup.ts",
+    "restore:storage": "tsx scripts/storage-restore.ts",
+    "restore:db": "tsx scripts/db-restore.ts"
   },
   "dependencies": {
     "@date-fns/tz": "^1.5.0",

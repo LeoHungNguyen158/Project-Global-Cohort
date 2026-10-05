@@ -21,39 +21,55 @@ A database backup does **not** include uploaded files. Both must be backed up.
 | What | How | Cadence | Retention |
 |---|---|---|---|
 | Database (managed) | Supabase Pro daily backups (automatic) | daily | 7 days on Pro; longer requires PITR or a higher plan |
-| Database (independent copy) | `npx supabase db dump` (schema and data) from an authorized workstation | weekly (decide) and before every migration | (decide), stored encrypted outside Supabase |
-| Uploaded files | `npm run backup:storage -- --out <folder>` downloads every object in the four private buckets with a checksum manifest | daily or weekly (decide) | (decide), stored encrypted outside Supabase |
+| Database (independent copy) | `npx supabase db dump … --data-only --schema public,auth,private` from an authorized workstation | weekly (decide) and before every migration | (decide), stored encrypted outside Supabase |
+| Uploaded files | `npm run backup:storage -- --out <folder>` downloads every object in the four private buckets with a SHA-256 manifest | daily or weekly (decide) | (decide), stored encrypted outside Supabase |
 
-Commands (run from an authorized workstation with the target project's variables loaded;
-never commit the outputs):
+Commands (run from an authorized workstation with the source project's variables loaded:
+`SUPABASE_DB_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SECRET_KEY`; never commit the
+outputs, `backups/` is git-ignored):
 
 ```bash
-# Database: schema, then data
-npx supabase db dump --db-url "$SUPABASE_DB_URL" -f backups/<date>/schema.sql
-npx supabase db dump --db-url "$SUPABASE_DB_URL" --data-only -f backups/<date>/data.sql
+# Database records: app data (public), accounts and password hashes (auth),
+# quiz answer keys and results (private). The schema itself comes from the migrations.
+npx supabase db dump --db-url "$SUPABASE_DB_URL" --data-only --schema public,auth,private \
+  -f backups/<date>/data.sql
 
 # Files: every object in course-content, submissions, message-attachments, avatars
 npm run backup:storage -- --out backups/<date>/storage
 ```
 
 Backups contain learners' personal data and work. Store them encrypted, restrict who can
-read them, and delete them when the retention period ends.
+read them, and delete them when the retention period ends. Auth settings (site URL,
+redirect URLs, SMTP sender, email templates) are project configuration, not data: keep
+them documented in [SETUP.md](SETUP.md#2-hosted-supabase-project-staging-and-production)
+so a replacement project can be configured the same way.
 
-### Restore drill (in a disposable environment only)
+### Restore (rehearse in a disposable environment)
 
-Never demonstrate recovery by deleting production data. Exercise the procedure in a
-throwaway Supabase project or the local stack:
+Never demonstrate recovery by deleting production data. Rehearse into a throwaway Supabase
+project, or a second local stack started from a copy of `supabase/` with a different
+`project_id` and ports:
 
-1. Start an empty target (`npm run db:reset` locally, or a new disposable project with
-   `npx supabase db push`).
-2. Load the data dump: `psql "$TARGET_DB_URL" -f backups/<date>/data.sql` (run as the
-   database owner).
-3. Upload the files: `npm run restore:storage -- --from backups/<date>/storage` (refuses
-   `APP_ENV=production` targets unless explicitly confirmed).
-4. Verify: sign in as a restored account, open a lesson PDF and a video, and confirm the
-   checksums reported by the restore script match the manifest.
+1. **Empty target with the same schema**: create the project and apply the migrations
+   (`npx supabase link --project-ref <ref> && npx supabase db push`), or start the local copy.
+   Use the same commit's migrations as the backup's source.
+2. **Records**: `SUPABASE_DB_URL=<target> npm run restore:db -- --from backups/<date>/data.sql`
+   shows what it will do; add `--yes` to load. It refuses a target that already has
+   accounts (unless `--replace`), a non-local target unless `--confirm-target <host>`, and
+   `APP_ENV=production` unless `--confirm-production`. Default rows created by the
+   migrations (upload limits) are replaced by the backup's. The load is one transaction.
+3. **Files**: with the target's `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SECRET_KEY`,
+   `npm run restore:storage -- --from backups/<date>/storage --yes --verify`. Each file is
+   checked against the manifest before upload (a corrupted backup file is reported and not
+   uploaded), and `--verify` downloads every restored file again and compares its SHA-256.
+4. **Configure** the target's Auth settings as in SETUP.md, point a staging app at it, and
+   check: a restored learner signs in with their existing password, sees their own courses,
+   grades and messages only, and opens a lesson PDF and video.
 5. Record the date, sizes, duration and result in
    [ACCEPTANCE_REPORT.md](ACCEPTANCE_REPORT.md) (AC17).
+
+For a real incident, Supabase's own backup restore (dashboard) is usually faster for the
+database; the commands above are the independent copy and the only copy of the files.
 
 ## Monitoring and logs
 
@@ -80,9 +96,10 @@ throwaway Supabase project or the local stack:
   available immediately. `UPLOAD_SCAN_MODE=quarantine` holds every new upload until an
   administrator releases it in Administration → Uploads; use it if the program's policy
   requires human review until a scanning service is added.
-- **Orphaned files**: `npm run maintenance:orphans` lists storage objects without a
-  database record and abandoned pending uploads (dry run by default); add `--apply` to
-  delete them.
+- **Orphaned files**: `npm run maintenance:orphans` reports storage objects without a file
+  record, bytes still stored for rejected or deleted records, and uploads left pending for
+  more than 24 hours (report only by default). `--apply` deletes those bytes and marks the
+  unfinished uploads rejected; file records, submissions and grades are kept.
 - Video is played from private storage through 5-minute signed links that are re-issued
   after an access check. A signed link works for anyone who has it until it expires; this is
   access control, not DRM.
