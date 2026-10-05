@@ -5,6 +5,7 @@ import { serverEnv } from "@/lib/env";
 import { friendlyError, type ActionResult } from "@/lib/errors";
 import { isUuid } from "@/lib/forms";
 import { signatureMatches } from "@/lib/uploads/signature";
+import { t } from "@/i18n";
 
 export type UploadPurpose = "lesson" | "submission" | "message" | "avatar";
 export type RegisteredUpload = { assetId: string; bucket: string; objectPath: string; maxBytes: number };
@@ -25,10 +26,10 @@ export async function registerUpload(input: {
   offeringId?: string | null;
   courseVersionId?: string | null;
 }): Promise<ActionResult<RegisteredUpload>> {
-  if (!PURPOSES.includes(input.purpose)) return { ok: false, error: "Unknown upload type." };
+  if (!PURPOSES.includes(input.purpose)) return { ok: false, error: t("common.uploadUnknownType") };
   const filename = String(input.filename ?? "").trim();
-  if (!filename || filename.length > 255 || /[/\\]/.test(filename)) return { ok: false, error: "Invalid file name." };
-  if (!Number.isSafeInteger(input.size) || input.size <= 0) return { ok: false, error: "The file is empty." };
+  if (!filename || filename.length > 255 || /[/\\]/.test(filename)) return { ok: false, error: t("common.uploadBadName") };
+  if (!Number.isSafeInteger(input.size) || input.size <= 0) return { ok: false, error: t("common.uploadEmpty") };
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("register_upload", {
     p_purpose: input.purpose,
@@ -38,7 +39,7 @@ export async function registerUpload(input: {
     p_offering: isUuid(input.offeringId) ? input.offeringId : null,
     p_course_version: isUuid(input.courseVersionId) ? input.courseVersionId : null,
   });
-  if (error || !data) return { ok: false, error: friendlyError(error, "Could not start the upload.") };
+  if (error || !data) return { ok: false, error: friendlyError(error, t("common.uploadCouldNotStart")) };
   return { ok: true, data: { assetId: data.asset_id, bucket: data.bucket, objectPath: data.object_path, maxBytes: Number(data.max_bytes) } };
 }
 
@@ -74,17 +75,17 @@ async function readHead(url: string, limit = 4096): Promise<Uint8Array> {
  * rejected and the stored object is deleted. Safe to call more than once.
  */
 export async function finalizeUpload(assetId: string): Promise<ActionResult<FinalizedUpload>> {
-  if (!isUuid(assetId)) return { ok: false, error: "Unknown upload." };
+  if (!isUuid(assetId)) return { ok: false, error: t("common.uploadUnknown") };
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
-  if (!auth.user) return { ok: false, error: "Your session ended. Sign in again." };
+  if (!auth.user) return { ok: false, error: t("common.uploadSessionEnded") };
   // The owner can always read their own asset row (RLS); nobody else's is visible here.
   const { data: asset } = await supabase
     .from("content_assets")
     .select("id, owner_id, bucket, object_path, declared_mime, size_bytes, status")
     .eq("id", assetId)
     .maybeSingle();
-  if (!asset || asset.owner_id !== auth.user.id) return { ok: false, error: "Unknown upload." };
+  if (!asset || asset.owner_id !== auth.user.id) return { ok: false, error: t("common.uploadUnknown") };
   if (asset.status !== "pending") return { ok: true, data: { assetId, status: asset.status } };
 
   // Authorized above; the privileged client is used only to inspect and update this one object.
@@ -97,21 +98,21 @@ export async function finalizeUpload(assetId: string): Promise<ActionResult<Fina
 
   const [prefix, folder, name] = asset.object_path.split("/");
   const { data: listing, error: listError } = await admin.storage.from(asset.bucket).list(`${prefix}/${folder}`, { search: name, limit: 5 });
-  if (listError) return { ok: false, error: "Could not verify the upload. Try again." };
+  if (listError) return { ok: false, error: t("common.uploadVerifyRetry") };
   const stored = listing?.find((o) => o.name === name);
-  if (!stored) return { ok: false, error: "The file did not finish uploading. Try again." };
+  if (!stored) return { ok: false, error: t("common.uploadIncomplete") };
   const storedSize = Number((stored.metadata as { size?: number } | null)?.size ?? -1);
-  if (storedSize !== Number(asset.size_bytes)) return reject("The uploaded size does not match the selected file.");
+  if (storedSize !== Number(asset.size_bytes)) return reject(t("common.uploadSizeMismatch"));
 
   const { data: signed, error: signError } = await admin.storage.from(asset.bucket).createSignedUrl(asset.object_path, 60);
-  if (signError || !signed) return { ok: false, error: "Could not verify the upload. Try again." };
+  if (signError || !signed) return { ok: false, error: t("common.uploadVerifyRetry") };
   let head: Uint8Array;
   try {
     head = await readHead(signed.signedUrl);
   } catch {
-    return { ok: false, error: "Could not verify the upload. Try again." };
+    return { ok: false, error: t("common.uploadVerifyRetry") };
   }
-  if (!signatureMatches(asset.declared_mime, head)) return reject("The file's content does not match its type.");
+  if (!signatureMatches(asset.declared_mime, head)) return reject(t("common.uploadTypeMismatch"));
 
   const status = serverEnv().uploadScanMode === "quarantine" ? "quarantined" : "ready";
   const { error: updateError } = await admin
@@ -119,6 +120,6 @@ export async function finalizeUpload(assetId: string): Promise<ActionResult<Fina
     .update({ status, detected_mime: asset.declared_mime, completed_at: new Date().toISOString() })
     .eq("id", asset.id)
     .eq("status", "pending");
-  if (updateError) return { ok: false, error: "Could not verify the upload. Try again." };
+  if (updateError) return { ok: false, error: t("common.uploadVerifyRetry") };
   return { ok: true, data: { assetId, status } };
 }
