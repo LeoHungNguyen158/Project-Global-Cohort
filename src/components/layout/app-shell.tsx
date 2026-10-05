@@ -14,7 +14,7 @@ export async function AppShell({ user, children }: { user: UserContext; children
     <div className="min-h-screen">
       <Sidebar displayName={user.displayName} unreadMessages={Number(unread ?? 0)} showAdmin={isAdminish(user)} signOutAction={signOut} />
       <div className="lg:pl-[232px]">
-        <main id="main" tabIndex={-1} className="min-h-screen focus:outline-none">
+        <main id="main" tabIndex={-1} className="min-h-screen pb-20 focus:outline-none">
           {children}
         </main>
       </div>
@@ -35,7 +35,7 @@ export function PublicShell({ children }: { children: ReactNode }) {
       <header className="bg-sidebar px-4 py-3 text-white sm:px-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Link href="/login" className="font-bold tracking-wide">{t("app.name")}</Link>
-          <nav aria-label="Site" className="flex gap-4 text-sm">
+          <nav aria-label={t("nav.site")} className="flex gap-4 text-sm">
             <Link className="hover:underline" href="/catalog">{t("nav.catalog")}</Link>
             <Link className="hover:underline" href="/help">{t("nav.help")}</Link>
             <Link className="hover:underline" href="/login">{t("auth.signIn")}</Link>

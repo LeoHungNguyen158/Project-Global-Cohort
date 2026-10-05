@@ -13,8 +13,9 @@ import { buttonClass } from "@/components/ui/button";
 import { setCoursesView } from "@/app/actions/courses";
 import { cn } from "@/components/ui/cn";
 import { t } from "@/i18n";
+import { tRich } from "@/i18n/rich";
 
-export const metadata: Metadata = { title: "Courses" };
+export const metadata: Metadata = { title: t("courses.title") };
 
 type SP = { q?: string; term?: string; filter?: string; per?: string; page?: string };
 const FILTERS = ["all", "favorites", "learning", "teaching", "administered"] as const;
@@ -100,7 +101,7 @@ export default async function CoursesPage({ searchParams }: { searchParams: Prom
   const groups: { label: string; items: CourseListEntry[] }[] = [];
   for (const e of entries) {
     const phase = offeringPhase(e.offering);
-    const label = phase === "ongoing" ? t("courses.ongoing") : phase === "upcoming" ? t("courses.upcoming") : `${e.offering.term_label || "Earlier"} (closed)`;
+    const label = phase === "ongoing" ? t("courses.ongoing") : phase === "upcoming" ? t("courses.upcoming") : t("courses.closedGroup", { term: e.offering.term_label || t("courses.earlier") });
     const g = groups.find((x) => x.label === label);
     if (g) g.items.push(e);
     else groups.push({ label, items: [e] });
@@ -127,7 +128,7 @@ export default async function CoursesPage({ searchParams }: { searchParams: Prom
       />
       <PageBody>
         <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-end">
-          <div className="flex self-start rounded-md border border-line bg-panel lg:self-auto" role="group" aria-label="Layout">
+          <div className="flex self-start rounded-md border border-line bg-panel lg:self-auto" role="group" aria-label={t("courses.layout")}>
             <form action={setCoursesView}>
               <input type="hidden" name="view" value="list" />
               <button
@@ -180,7 +181,7 @@ export default async function CoursesPage({ searchParams }: { searchParams: Prom
                 <option value="favorites">{t("courses.favorites")}</option>
                 <option value="learning">{t("courses.learning")}</option>
                 <option value="teaching">{t("courses.teaching")}</option>
-                {isAdminish ? <option value="administered">All offerings I administer</option> : null}
+                {isAdminish ? <option value="administered">{t("courses.administered")}</option> : null}
               </select>
             </div>
             <div className="flex items-end gap-2">
@@ -194,7 +195,7 @@ export default async function CoursesPage({ searchParams }: { searchParams: Prom
               </div>
               <span aria-hidden="true" className="pb-2 text-sm">{t("common.itemsPerPage")}</span>
             </div>
-            <button type="submit" data-apply className={buttonClass("secondary")}>Apply</button>
+            <button type="submit" data-apply className={buttonClass("secondary")}>{t("common.apply")}</button>
             <AutoSubmit />
           </form>
         </div>
@@ -205,15 +206,17 @@ export default async function CoursesPage({ searchParams }: { searchParams: Prom
 
         {base.length === 0 ? (
           <EmptyState title={t("courses.noCourses")}>
-            {isAdminish ? <>Choose <Link className="text-primary underline" href="/courses?filter=administered">All offerings I administer</Link> to see the offerings in your cohorts.</> : <>Browse the <Link className="text-primary underline" href="/catalog">course catalog</Link> to request access.</>}
+            {isAdminish
+              ? tRich("courses.noCoursesAdmin", { link: <Link className="text-primary underline" href="/courses?filter=administered">{t("courses.administered")}</Link> })
+              : tRich("courses.noCoursesLearner", { link: <Link className="text-primary underline" href="/catalog">{t("courses.catalogLink")}</Link> })}
           </EmptyState>
         ) : filtered.length === 0 ? (
-          <EmptyState title={t("courses.empty")} action={<Link className={buttonClass("secondary")} href="/courses">Clear search and filters</Link>} />
+          <EmptyState title={t("courses.empty")} action={<Link className={buttonClass("secondary")} href="/courses">{t("courses.clearFilters")}</Link>} />
         ) : (
           <div className="space-y-6">
-            {groups.map((g) => (
-              <section key={g.label} aria-labelledby={`group-${g.label}`}>
-                <h2 id={`group-${g.label}`} className="mb-3 text-lg font-semibold">{g.label}</h2>
+            {groups.map((g, i) => (
+              <section key={g.label} aria-labelledby={`course-group-${i}`}>
+                <h2 id={`course-group-${i}`} className="mb-3 text-lg font-semibold">{g.label}</h2>
                 {view === "grid" ? (
                   <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                     {g.items.map((e) => <CourseCard key={e.offering.id} entry={e} />)}

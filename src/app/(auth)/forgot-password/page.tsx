@@ -6,20 +6,20 @@ import { SubmitButton } from "@/components/ui/submit-button";
 import { requestPasswordReset } from "@/app/actions/auth";
 import { t } from "@/i18n";
 
-export const metadata: Metadata = { title: "Forgot password" };
+export const metadata: Metadata = { title: t("auth.forgotMeta") };
 
 export default function ForgotPasswordPage() {
   return (
     <>
       <h1 className="mb-2 text-2xl font-semibold">{t("auth.forgotTitle")}</h1>
-      <p className="mb-6 text-sm text-muted">Enter the email address you use for this workspace. We will email you a link to choose a new password.</p>
+      <p className="mb-6 text-sm text-muted">{t("auth.forgotIntro")}</p>
       <ActionForm action={requestPasswordReset} className="space-y-4">
         <Field label={t("auth.email")} htmlFor="email" required>
           <Input id="email" name="email" type="email" autoComplete="email" required />
         </Field>
-        <SubmitButton className="w-full" pendingText="Sending…">{t("auth.sendReset")}</SubmitButton>
+        <SubmitButton className="w-full" pendingText={t("auth.sending")}>{t("auth.sendReset")}</SubmitButton>
       </ActionForm>
-      <p className="mt-6 text-sm"><Link className="text-primary underline" href="/login">Back to sign in</Link></p>
+      <p className="mt-6 text-sm"><Link className="text-primary underline" href="/login">{t("auth.backToSignIn")}</Link></p>
     </>
   );
 }

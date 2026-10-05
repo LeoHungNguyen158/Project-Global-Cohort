@@ -4,13 +4,13 @@ import type { ActionResult } from "@/lib/errors";
 import { Alert } from "./alert";
 import { submitWithoutReset } from "./submit-without-reset";
 
-type Action = (prev: ActionResult<unknown> | null, formData: FormData) => Promise<ActionResult<unknown>>;
+type Action<T> = (prev: ActionResult<T> | null, formData: FormData) => Promise<ActionResult<T>>;
 
 /**
  * Wraps a server action form and announces the real outcome. Success text is shown
  * only when the server confirmed the change; failures keep the user's input.
  */
-export function ActionForm({
+export function ActionForm<T = unknown>({
   action,
   children,
   className,
@@ -18,14 +18,14 @@ export function ActionForm({
   successMessage,
   id,
 }: {
-  action: Action;
+  action: Action<T>;
   children: ReactNode;
   className?: string;
   resetOnSuccess?: boolean;
   successMessage?: string;
   id?: string;
 }) {
-  const [state, formAction] = useActionState(action, null);
+  const [state, formAction] = useActionState<ActionResult<T> | null, FormData>(action, null);
   const ref = useRef<HTMLFormElement>(null);
   useEffect(() => {
     if (state?.ok && resetOnSuccess) ref.current?.reset();

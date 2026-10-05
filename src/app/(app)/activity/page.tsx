@@ -11,24 +11,25 @@ import { formatDate, formatDateTime, formatTime } from "@/lib/time";
 import { openNotification, markAllNotificationsRead } from "@/app/actions/activity";
 import { Panel } from "@/components/ui/panel";
 import { Badge } from "@/components/ui/badge";
+import { Alert } from "@/components/ui/alert";
 import { EmptyState } from "@/components/ui/empty-state";
 import { AutoSubmit } from "@/components/ui/auto-submit";
 import { buttonClass } from "@/components/ui/button";
-import { t } from "@/i18n";
+import { t, type MessageKey } from "@/i18n";
 
-export const metadata: Metadata = { title: "Activity" };
+export const metadata: Metadata = { title: t("nav.activity") };
 
 const KINDS = [
-  { value: "", label: "Show All" },
-  { value: "announcement", label: "Announcements" },
-  { value: "grade", label: "Grades" },
-  { value: "message", label: "Messages" },
-  { value: "content", label: "Course content" },
-  { value: "submission", label: "Submissions" },
-  { value: "access_request", label: "Access requests" },
-  { value: "invitation", label: "Invitations" },
-  { value: "system", label: "System" },
-] as const;
+  { value: "", label: "activity.kindAll" },
+  { value: "announcement", label: "activity.kindAnnouncement" },
+  { value: "grade", label: "activity.kindGrade" },
+  { value: "message", label: "activity.kindMessage" },
+  { value: "content", label: "activity.kindContent" },
+  { value: "submission", label: "activity.kindSubmission" },
+  { value: "access_request", label: "activity.kindAccessRequest" },
+  { value: "invitation", label: "activity.kindInvitation" },
+  { value: "system", label: "activity.kindSystem" },
+] as const satisfies readonly { value: string; label: MessageKey }[];
 
 const ICONS: Record<string, LucideIcon> = {
   announcement: Megaphone,
@@ -55,7 +56,7 @@ type Notification = {
 
 type Upcoming = { key: string; when: string; label: string; detail: string; href: string; kind: "assignment" | "quiz" | "event" };
 
-export default async function ActivityPage({ searchParams }: { searchParams: Promise<{ kind?: string; limit?: string }> }) {
+export default async function ActivityPage({ searchParams }: { searchParams: Promise<{ kind?: string; limit?: string; password_updated?: string }> }) {
   const sp = await searchParams;
   const user = await requireUser("/activity");
   const supabase = await createClient();
@@ -92,8 +93,8 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
   const enrolledIds = new Set(user.enrollments.map((e) => e.offering_id));
   const current = offerings.filter((o) => (staffIds.has(o.id) || enrolledIds.has(o.id)) && offeringPhase(o) === "ongoing");
 
-  // Per-course extras: learner progress or the staff grading queue.
-  const extras = new Map<string, { progress?: number | null; toGrade?: number }>();
+  // Per-course extras: learner progress and where to continue, or the staff grading queue.
+  const extras = new Map<string, CardExtra>();
   await Promise.all(
     current.slice(0, 6).map(async (o) => {
       if (staffIds.has(o.id)) {
@@ -101,7 +102,10 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
         extras.set(o.id, { toGrade: Number(data?.submissions_to_grade ?? 0) + Number(data?.attempts_to_grade ?? 0) });
       } else {
         const { data } = await supabase.rpc("course_progress", { p_offering: o.id });
-        extras.set(o.id, { progress: data?.percent == null ? null : Number(data.percent) });
+        extras.set(o.id, {
+          progress: data?.percent == null ? null : Number(data.percent),
+          nextLessonId: typeof data?.next_lesson_id === "string" ? data.next_lesson_id : null,
+        });
       }
     }),
   );
@@ -116,12 +120,17 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
           <Settings aria-hidden="true" className="h-6 w-6" />
         </Link>
       </header>
+      {sp.password_updated ? (
+        <div className="px-4 pt-4 sm:px-8">
+          <Alert tone="success">{t("auth.resetDone")}</Alert>
+        </div>
+      ) : null}
       <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(320px,420px)]">
         <div className="space-y-6 px-4 py-6 sm:px-8">
           <Panel aria-labelledby="courses-activity" className="p-4 sm:p-6">
             <h2 id="courses-activity" className="mb-4 text-lg font-semibold">{t("activity.coursesActivity")}</h2>
             {current.length === 0 ? (
-              <EmptyState title="No current courses">Courses you teach or take appear here while they are running.</EmptyState>
+              <EmptyState title={t("activity.noCurrent")}>{t("activity.noCurrentHint")}</EmptyState>
             ) : (
               <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {current.slice(0, 6).map((o) => (
@@ -134,9 +143,9 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
 
           <Panel aria-labelledby="upcoming-heading" className="p-4 sm:p-6">
             <h2 id="upcoming-heading" className="mb-1 text-lg font-semibold">{t("activity.upcoming")}</h2>
-            <p className="mb-4 text-sm text-muted">Next 14 days · {t("common.timezoneNote", { tz })}</p>
+            <p className="mb-4 text-sm text-muted">{t("activity.nextDays")} · {t("common.timezoneNote", { tz })}</p>
             {upcoming.length === 0 ? (
-              <EmptyState title="Nothing due in the next two weeks." />
+              <EmptyState title={t("activity.nothingDue")} />
             ) : (
               <ul className="divide-y divide-line">
                 {upcoming.map((u) => (
@@ -146,7 +155,7 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
                       <p className="text-sm text-muted">{u.detail}</p>
                     </div>
                     <span className="text-sm">
-                      <span className="sr-only">{u.kind === "event" ? "Starts" : u.kind === "quiz" ? "Closes" : "Due"} </span>
+                      <span className="sr-only">{t(u.kind === "event" ? "activity.whenStarts" : u.kind === "quiz" ? "activity.whenCloses" : "activity.whenDue")} </span>
                       {formatDateTime(u.when, tz)}
                     </span>
                   </li>
@@ -166,11 +175,11 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
                 <label htmlFor="stream-filter" className="block text-xs text-muted">{t("common.filter")}</label>
                 <select id="stream-filter" name="kind" defaultValue={kind} className="block min-h-10 w-52 rounded-md border border-line bg-white px-3 py-2">
                   {KINDS.map((k) => (
-                    <option key={k.value} value={k.value}>{k.label}</option>
+                    <option key={k.value} value={k.value}>{t(k.label)}</option>
                   ))}
                 </select>
               </div>
-              <button type="submit" data-apply className={buttonClass("secondary", "sm")}>Apply</button>
+              <button type="submit" data-apply className={buttonClass("secondary", "sm")}>{t("common.apply")}</button>
               <AutoSubmit />
             </form>
             {unread.length > 0 ? (
@@ -195,7 +204,7 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
           )}
           {hasMore ? (
             <Link href={`/activity?${new URLSearchParams({ ...(kind ? { kind } : {}), limit: String(Math.min(limit + 20, 100)) })}`} className={`${buttonClass("secondary", "sm")} mt-4`}>
-              Show more
+              {t("common.showMore")}
             </Link>
           ) : null}
         </aside>
@@ -204,14 +213,16 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
   );
 }
 
-function CourseActivityCard({ offering, unread, extra }: { offering: OfferingSummary; unread: number; extra?: { progress?: number | null; toGrade?: number } }) {
+type CardExtra = { progress?: number | null; nextLessonId?: string | null; toGrade?: number };
+
+function CourseActivityCard({ offering, unread, extra }: { offering: OfferingSummary; unread: number; extra?: CardExtra }) {
   const title = offeringTitle(offering);
   return (
-    <li className="overflow-hidden rounded-md border border-line bg-panel">
+    <li className="flex flex-col overflow-hidden rounded-md border border-line bg-panel">
       <div aria-hidden="true" className="h-20" style={{ background: `linear-gradient(135deg, ${offering.accent_color} 0%, ${offering.accent_color}bb 50%, #0f172a 100%)` }} />
-      <div className="px-4 py-3">
+      <div className="flex flex-1 flex-col px-4 py-3">
         <p className="text-sm text-muted">{offering.code}</p>
-        <p className="truncate font-semibold" title={title}>
+        <p className="font-semibold leading-snug [overflow-wrap:anywhere]">
           <Link href={`/courses/${offering.id}`} className="hover:underline">{title}</Link>
         </p>
         <div className="mt-2 flex flex-wrap items-center gap-3 text-sm">
@@ -219,9 +230,18 @@ function CourseActivityCard({ offering, unread, extra }: { offering: OfferingSum
             <Flag aria-hidden="true" className="h-4 w-4" />
             <span><span className="font-semibold">{unread}</span> {unread === 1 ? t("activity.unreadOne") : t("activity.unreadMany")}</span>
           </span>
-          {extra?.toGrade !== undefined ? <span>{extra.toGrade} to grade</span> : null}
-          {extra?.progress !== undefined && extra.progress !== null ? <span>{extra.progress}% complete</span> : null}
+          {extra?.toGrade !== undefined ? <span>{t("activity.toGrade", { count: extra.toGrade })}</span> : null}
+          {extra?.progress !== undefined && extra.progress !== null ? <span>{t("courses.percentComplete", { percent: extra.progress })}</span> : null}
         </div>
+        {extra?.nextLessonId ? (
+          <Link
+            href={`/courses/${offering.id}/content/${extra.nextLessonId}`}
+            className={`${buttonClass("secondary", "sm")} mt-3 self-start`}
+            aria-label={t("activity.continueIn", { title })}
+          >
+            {t("activity.continue")}
+          </Link>
+        ) : null}
       </div>
     </li>
   );
@@ -236,7 +256,7 @@ function StreamItem({ n, tz, offering, cohort }: { n: Notification; tz: string; 
       <div className="min-w-0 border-l-2 border-[#93c5fd] pl-3">
         <p className="text-sm">
           {formatDate(n.occurred_at, tz)} <span className="text-muted">{formatTime(n.occurred_at, tz)}</span>
-          {!n.read_at ? <Badge tone="info" className="ml-2">New</Badge> : null}
+          {!n.read_at ? <Badge tone="info" className="ml-2">{t("common.new")}</Badge> : null}
         </p>
         {scope ? <p className="text-sm font-semibold">{scope}</p> : null}
         <p className="text-sm">{n.title}</p>
@@ -279,15 +299,15 @@ async function loadUpcoming(
   for (const a of asg.data ?? []) {
     if (submitted.has(a.id)) continue;
     const o = byId.get(a.offering_id);
-    out.push({ key: `a-${a.id}`, when: a.due_at, kind: "assignment", label: a.title, detail: `Assignment due · ${o?.code ?? ""}`, href: `/courses/${a.offering_id}/assignments/${a.id}` });
+    out.push({ key: `a-${a.id}`, when: a.due_at, kind: "assignment", label: a.title, detail: `${t("activity.assignmentDue")} · ${o?.code ?? ""}`, href: `/courses/${a.offering_id}/assignments/${a.id}` });
   }
   for (const q of quizzes.data ?? []) {
     const o = byId.get(q.offering_id);
-    out.push({ key: `q-${q.id}`, when: q.closes_at, kind: "quiz", label: q.title, detail: `Quiz closes · ${o?.code ?? ""}`, href: `/courses/${q.offering_id}/quizzes/${q.id}` });
+    out.push({ key: `q-${q.id}`, when: q.closes_at, kind: "quiz", label: q.title, detail: `${t("activity.quizCloses")} · ${o?.code ?? ""}`, href: `/courses/${q.offering_id}/quizzes/${q.id}` });
   }
   for (const e of events.data ?? []) {
     const o = e.offering_id ? byId.get(e.offering_id) : undefined;
-    const kindLabel = e.kind === "live_session" ? "Live session" : e.kind === "office_hours" ? "Office hours" : "Event";
+    const kindLabel = t(e.kind === "live_session" ? "activity.liveSession" : e.kind === "office_hours" ? "activity.officeHours" : "activity.event");
     out.push({
       key: `e-${e.id}`,
       when: e.starts_at,

@@ -6,15 +6,16 @@ import { Alert } from "./alert";
 import { buttonClass } from "./button";
 import { SubmitButton } from "./submit-button";
 import { submitWithoutReset } from "./submit-without-reset";
+import { t } from "@/i18n";
 
-type Action = (prev: ActionResult<unknown> | null, formData: FormData) => Promise<ActionResult<unknown>>;
+type Action<T> = (prev: ActionResult<T> | null, formData: FormData) => Promise<ActionResult<T>>;
 
 /**
  * A button that asks for confirmation in an accessible dialog before running a
  * server action (publishing, deleting, sending to many people). The dialog states
  * the consequence; the result is announced from the server's real response.
  */
-export function ConfirmForm({
+export function ConfirmForm<T = unknown>({
   action,
   fields = {},
   trigger,
@@ -27,7 +28,7 @@ export function ConfirmForm({
   children,
   disabled,
 }: {
-  action: Action;
+  action: Action<T>;
   fields?: Record<string, string>;
   trigger: ReactNode;
   title: string;
@@ -41,7 +42,7 @@ export function ConfirmForm({
   disabled?: boolean;
 }) {
   const [open, setOpen] = useState(false);
-  const [state, formAction] = useActionState(async (prev: ActionResult<unknown> | null, formData: FormData) => {
+  const [state, formAction] = useActionState(async (prev: ActionResult<T> | null, formData: FormData) => {
     const result = await action(prev, formData);
     if (result.ok) setOpen(false);
     return result;
@@ -62,8 +63,8 @@ export function ConfirmForm({
           {children}
           {state && !state.ok ? <Alert tone="error">{state.error}</Alert> : null}
           <div className="flex flex-wrap justify-end gap-2">
-            <button type="button" className={buttonClass("secondary")} onClick={() => setOpen(false)}>Cancel</button>
-            <SubmitButton variant={tone === "danger" ? "danger" : "primary"} pendingText="Working…">{confirmLabel}</SubmitButton>
+            <button type="button" className={buttonClass("secondary")} onClick={() => setOpen(false)}>{t("common.cancel")}</button>
+            <SubmitButton variant={tone === "danger" ? "danger" : "primary"} pendingText={t("common.working")}>{confirmLabel}</SubmitButton>
           </div>
         </form>
       </Dialog>

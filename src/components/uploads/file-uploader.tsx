@@ -7,6 +7,7 @@ import { publicEnv } from "@/lib/env";
 import { registerUpload, finalizeUpload, type UploadPurpose } from "@/app/actions/uploads";
 import { guessMime, formatBytes } from "@/lib/uploads/mime";
 import { buttonClass } from "@/components/ui/button";
+import { t } from "@/i18n";
 
 export type UploadedAsset = { assetId: string; filename: string; size: number; mime: string; status: "ready" | "quarantined" };
 
@@ -72,8 +73,9 @@ export function FileUploader({
     update(key, { state: { phase: "registering" } });
     const reg = await registerUpload({ purpose, filename: file.name, mime, size: file.size, offeringId, courseVersionId });
     if (!reg.ok || !reg.data) {
-      update(key, { state: { phase: "rejected", message: reg.ok ? "Could not start the upload." : reg.error } });
-      setAnnouncement(`${file.name}: ${reg.ok ? "upload failed" : reg.error}`);
+      const message = reg.ok ? t("common.uploadCouldNotStart") : reg.error;
+      update(key, { state: { phase: "rejected", message } });
+      setAnnouncement(t("common.uploadSaidError", { name: file.name, error: message }));
       return;
     }
     const { assetId, bucket, objectPath } = reg.data;
@@ -84,7 +86,7 @@ export function FileUploader({
       if (file.size > TUS_THRESHOLD) {
         const { data } = await supabase.auth.getSession();
         const token = data.session?.access_token;
-        if (!token) throw new Error("Your session ended. Sign in again.");
+        if (!token) throw new Error("session");
         await new Promise<void>((resolve, reject) => {
           const upload = new TusUpload(file, {
             endpoint: `${publicEnv.supabaseUrl}/storage/v1/upload/resumable`,
@@ -111,13 +113,14 @@ export function FileUploader({
         if (error) throw new Error(error.message);
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Upload failed.";
-      if (message === "canceled") {
+      const reason = err instanceof Error ? err.message : "";
+      if (reason === "canceled") {
         update(key, { state: { phase: "canceled" }, abort: undefined });
-        setAnnouncement(`${file.name}: upload canceled`);
+        setAnnouncement(t("common.uploadSaidCanceled", { name: file.name }));
       } else {
-        update(key, { state: { phase: "error", message: "The upload was interrupted. Check your connection and try again." }, abort: undefined });
-        setAnnouncement(`${file.name}: upload interrupted`);
+        const message = reason === "session" ? t("common.uploadSessionEnded") : t("common.uploadInterrupted");
+        update(key, { state: { phase: "error", message }, abort: undefined });
+        setAnnouncement(t("common.uploadSaidInterrupted", { name: file.name }));
       }
       return;
     }
@@ -125,19 +128,20 @@ export function FileUploader({
     update(key, { state: { phase: "verifying" }, abort: undefined });
     const fin = await finalizeUpload(assetId);
     if (!fin.ok || !fin.data) {
-      update(key, { state: { phase: "error", message: fin.ok ? "Could not verify the upload." : fin.error } });
+      update(key, { state: { phase: "error", message: fin.ok ? t("common.uploadCouldNotVerify") : fin.error } });
       return;
     }
     if (fin.data.status === "rejected") {
-      update(key, { state: { phase: "rejected", message: fin.data.reason ?? "The file was rejected." } });
-      setAnnouncement(`${file.name}: rejected. ${fin.data.reason ?? ""}`);
+      const reason = fin.data.reason ?? t("common.uploadFileRejected");
+      update(key, { state: { phase: "rejected", message: reason } });
+      setAnnouncement(t("common.uploadSaidRejected", { name: file.name, reason }));
       return;
     }
     const status = fin.data.status === "quarantined" ? "quarantined" : "ready";
     update(key, { state: { phase: status } });
     const asset: UploadedAsset = { assetId, filename: file.name, size: file.size, mime, status };
     setDone((prev) => (multiple ? [...prev, asset] : [asset]));
-    setAnnouncement(status === "ready" ? `${file.name} uploaded` : `${file.name} uploaded and held for review`);
+    setAnnouncement(t(status === "ready" ? "common.uploadSaidDone" : "common.uploadSaidHeld", { name: file.name }));
     onUploaded?.(asset);
   }
 
@@ -175,7 +179,7 @@ export function FileUploader({
       </div>
       {name ? done.map((a) => <input key={a.assetId} type="hidden" name={name} value={a.assetId} />) : null}
       {items.length > 0 ? (
-        <ul className="space-y-2" aria-label="Uploads">
+        <ul className="space-y-2" aria-label={t("common.uploads")}>
           {items.map((it) => (
             <li key={it.key} className="rounded-md border border-line bg-panel px-3 py-2 text-sm">
               <div className="flex flex-wrap items-center justify-between gap-2">
@@ -184,18 +188,18 @@ export function FileUploader({
                   <StatusText state={it.state} />
                   {it.state.phase === "uploading" && it.abort ? (
                     <button type="button" className={buttonClass("ghost", "sm")} onClick={() => it.abort?.()}>
-                      <X aria-hidden="true" className="h-4 w-4" /> Cancel
+                      <X aria-hidden="true" className="h-4 w-4" /> {t("common.cancel")}
                     </button>
                   ) : null}
                   {it.state.phase === "error" || it.state.phase === "canceled" ? (
                     <button type="button" className={buttonClass("secondary", "sm")} onClick={() => void run(it)}>
-                      <RotateCcw aria-hidden="true" className="h-4 w-4" /> Retry
+                      <RotateCcw aria-hidden="true" className="h-4 w-4" /> {t("common.uploadRetry")}
                     </button>
                   ) : null}
                 </span>
               </div>
               {it.state.phase === "uploading" ? (
-                <progress className="mt-2 h-2 w-full" max={100} value={it.state.percent ?? undefined} aria-label={`Uploading ${it.file.name}`} />
+                <progress className="mt-2 h-2 w-full" max={100} value={it.state.percent ?? undefined} aria-label={t("common.uploadProgress", { name: it.file.name })} />
               ) : null}
               {it.state.phase === "rejected" || it.state.phase === "error" ? <p className="mt-1 text-danger">{it.state.message}</p> : null}
             </li>
@@ -210,20 +214,20 @@ export function FileUploader({
 function StatusText({ state }: { state: ItemState }) {
   switch (state.phase) {
     case "registering":
-      return <span className="text-muted">Preparing…</span>;
+      return <span className="text-muted">{t("common.uploadPreparing")}</span>;
     case "uploading":
-      return <span className="text-muted">{state.percent === null ? "Uploading…" : `Uploading ${state.percent}%`}</span>;
+      return <span className="text-muted">{state.percent === null ? t("common.uploadUploading") : t("common.uploadPercent", { percent: state.percent })}</span>;
     case "verifying":
-      return <span className="text-muted">Checking file…</span>;
+      return <span className="text-muted">{t("common.uploadChecking")}</span>;
     case "ready":
-      return <span className="inline-flex items-center gap-1 text-success"><CheckCircle2 aria-hidden="true" className="h-4 w-4" /> Uploaded</span>;
+      return <span className="inline-flex items-center gap-1 text-success"><CheckCircle2 aria-hidden="true" className="h-4 w-4" /> {t("common.uploadDone")}</span>;
     case "quarantined":
-      return <span className="inline-flex items-center gap-1 text-warning"><Clock aria-hidden="true" className="h-4 w-4" /> Held for review</span>;
+      return <span className="inline-flex items-center gap-1 text-warning"><Clock aria-hidden="true" className="h-4 w-4" /> {t("common.uploadHeld")}</span>;
     case "rejected":
-      return <span className="inline-flex items-center gap-1 text-danger"><AlertCircle aria-hidden="true" className="h-4 w-4" /> Rejected</span>;
+      return <span className="inline-flex items-center gap-1 text-danger"><AlertCircle aria-hidden="true" className="h-4 w-4" /> {t("common.uploadRejected")}</span>;
     case "error":
-      return <span className="inline-flex items-center gap-1 text-danger"><AlertCircle aria-hidden="true" className="h-4 w-4" /> Failed</span>;
+      return <span className="inline-flex items-center gap-1 text-danger"><AlertCircle aria-hidden="true" className="h-4 w-4" /> {t("common.uploadFailed")}</span>;
     case "canceled":
-      return <span className="text-muted">Canceled</span>;
+      return <span className="text-muted">{t("common.uploadCanceled")}</span>;
   }
 }

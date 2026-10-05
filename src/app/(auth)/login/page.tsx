@@ -8,7 +8,7 @@ import { signIn } from "@/app/actions/auth";
 import { safeNextPath } from "@/lib/safe-redirect";
 import { t } from "@/i18n";
 
-export const metadata: Metadata = { title: "Sign in" };
+export const metadata: Metadata = { title: t("auth.signIn") };
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const sp = await searchParams;
@@ -19,7 +19,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       <p className="mb-6 text-sm text-muted">{t("auth.inviteOnly")}</p>
       {sp.error === "inactive" ? <Alert tone="error" className="mb-4">{t("auth.inactive")}</Alert> : null}
       {sp.error === "link" ? <Alert tone="error" className="mb-4">{t("auth.linkInvalid")}</Alert> : null}
-      {sp.signed_out ? <Alert tone="success" className="mb-4">You have signed out.</Alert> : null}
+      {sp.signed_out ? <Alert tone="success" className="mb-4">{t("auth.signedOut")}</Alert> : null}
       {sp.password_updated ? <Alert tone="success" className="mb-4">{t("auth.resetDone")}</Alert> : null}
       <ActionForm action={signIn} className="space-y-4">
         <input type="hidden" name="next" value={next} />

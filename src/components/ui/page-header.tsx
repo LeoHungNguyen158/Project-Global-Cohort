@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { t } from "@/i18n";
 
 export type Crumb = { label: string; href?: string };
 
@@ -7,7 +8,7 @@ export function PageHeader({ title, actions, crumbs, description }: { title: Rea
   return (
     <header className="border-b border-line bg-panel px-4 py-5 sm:px-8">
       {crumbs && crumbs.length > 0 ? (
-        <nav aria-label="Breadcrumb" className="mb-2 text-sm text-muted">
+        <nav aria-label={t("common.breadcrumb")} className="mb-2 text-sm text-muted">
           <ol className="flex flex-wrap items-center gap-1">
             {crumbs.map((c, i) => (
               <li key={i} className="flex items-center gap-1">

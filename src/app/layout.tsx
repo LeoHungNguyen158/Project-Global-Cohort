@@ -4,7 +4,7 @@ import { t } from "@/i18n";
 
 export const metadata: Metadata = {
   title: { default: t("app.name"), template: `%s · ${t("app.name")}` },
-  description: "Cohort-based learning workspace for the Crew Scaler Global Cohort.",
+  description: t("app.description"),
   robots: { index: false, follow: false },
 };
 

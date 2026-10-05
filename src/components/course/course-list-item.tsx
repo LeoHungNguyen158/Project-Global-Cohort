@@ -6,6 +6,7 @@ import { FavoriteButton } from "./favorite-button";
 import type { OfferingSummary, StaffRow } from "@/lib/data/offerings";
 import { offeringPhase, offeringTitle } from "@/lib/data/offerings";
 import { formatDate } from "@/lib/time";
+import { t } from "@/i18n";
 
 export type CourseListEntry = {
   offering: OfferingSummary;
@@ -18,34 +19,34 @@ export type CourseListEntry = {
 
 function StatusText({ entry }: { entry: CourseListEntry }) {
   const o = entry.offering;
-  if (o.status === "draft") return <span>Draft (hidden from learners)</span>;
+  if (o.status === "draft") return <span>{t("courses.statusDraft")}</span>;
   const phase = offeringPhase(o);
   if (phase === "archived")
     return (
       <span className="inline-flex items-center gap-1">
-        <Lock aria-hidden="true" className="h-3.5 w-3.5" /> Closed
+        <Lock aria-hidden="true" className="h-3.5 w-3.5" /> {t("common.closed")}
       </span>
     );
-  if (phase === "upcoming") return <span>Opens {formatDate(o.starts_at, o.timezone)}</span>;
-  return <span>Open</span>;
+  if (phase === "upcoming") return <span>{t("courses.statusOpens", { date: formatDate(o.starts_at, o.timezone) })}</span>;
+  return <span>{t("common.open")}</span>;
 }
 
 function Instructors({ staff }: { staff: StaffRow[] }) {
   const instructors = staff.filter((s) => s.role === "instructor");
   const people = instructors.length > 0 ? instructors : staff;
-  if (people.length === 0) return <span className="text-muted">No instructor listed</span>;
-  if (staff.length === 1) return <span>{staff[0].profiles?.display_name ?? "Instructor"}</span>;
+  if (people.length === 0) return <span className="text-muted">{t("courses.noInstructor")}</span>;
+  if (staff.length === 1) return <span>{staff[0].profiles?.display_name ?? t("courses.roleInstructor")}</span>;
   return (
     <details className="relative inline-block">
       <summary className="cursor-pointer list-none text-primary underline underline-offset-2 [&::-webkit-details-marker]:hidden">
-        Multiple Instructors
+        {t("courses.multipleInstructors")}
       </summary>
       <div className="absolute left-0 z-10 mt-1 w-64 rounded-md border border-line bg-panel p-3 shadow-lg">
-        <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted">Course staff</p>
+        <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted">{t("courses.courseStaff")}</p>
         <ul className="space-y-1 text-sm">
           {staff.map((s) => (
             <li key={s.user_id}>
-              {s.profiles?.display_name ?? "Staff member"} <span className="text-muted">({s.role === "ta" ? "Teaching assistant" : "Instructor"})</span>
+              {s.profiles?.display_name ?? t("courses.staffMember")} <span className="text-muted">({s.role === "ta" ? t("courses.roleTa") : t("courses.roleInstructor")})</span>
             </li>
           ))}
         </ul>
@@ -57,42 +58,42 @@ function Instructors({ staff }: { staff: StaffRow[] }) {
 function RoleLabel({ entry }: { entry: CourseListEntry }) {
   switch (entry.role) {
     case "instructor":
-      return <>You teach this course</>;
+      return <>{t("courses.youTeach")}</>;
     case "ta":
-      return <>You are a teaching assistant</>;
+      return <>{t("courses.youAssist")}</>;
     case "admin":
-      return <>You administer this offering</>;
+      return <>{t("courses.youAdminister")}</>;
     default:
-      return <>{entry.enrollmentStatus === "completed" ? "Completed" : "Enrolled"}</>;
+      return <>{entry.enrollmentStatus === "completed" ? t("courses.completed") : t("courses.enrolled")}</>;
   }
 }
 
 function MoreInfo({ entry, tz }: { entry: CourseListEntry; tz: string }) {
   const o = entry.offering;
   return (
-    <Disclosure summary="More info" summaryClassName="text-ink">
+    <Disclosure summary={t("common.moreInfo")} summaryClassName="text-ink">
       <dl className="grid max-w-2xl grid-cols-[max-content_1fr] gap-x-4 gap-y-1 rounded-md bg-canvas p-3 text-sm">
         {o.course_versions?.summary ? (
           <>
-            <dt className="font-medium">Summary</dt>
+            <dt className="font-medium">{t("courses.infoSummary")}</dt>
             <dd>{o.course_versions.summary}</dd>
           </>
         ) : null}
-        <dt className="font-medium">Cohort</dt>
+        <dt className="font-medium">{t("courses.infoCohort")}</dt>
         <dd>{o.cohorts?.name ?? "—"}</dd>
-        <dt className="font-medium">Term</dt>
+        <dt className="font-medium">{t("courses.infoTerm")}</dt>
         <dd>{o.term_label || "—"}</dd>
-        <dt className="font-medium">Dates</dt>
+        <dt className="font-medium">{t("courses.infoDates")}</dt>
         <dd>
-          {o.starts_at ? `${formatDate(o.starts_at, tz)} – ${formatDate(o.ends_at, tz)}` : "Not scheduled"}
-          {o.timezone !== tz ? <span className="text-muted"> (course time zone: {o.timezone})</span> : null}
+          {o.starts_at ? `${formatDate(o.starts_at, tz)} – ${formatDate(o.ends_at, tz)}` : t("courses.infoNotScheduled")}
+          {o.timezone !== tz ? <span className="text-muted"> {t("courses.infoCourseTz", { tz: o.timezone })}</span> : null}
         </dd>
-        <dt className="font-medium">Your role</dt>
+        <dt className="font-medium">{t("courses.infoRole")}</dt>
         <dd><RoleLabel entry={entry} /></dd>
         {entry.progressPercent !== null ? (
           <>
-            <dt className="font-medium">Progress</dt>
-            <dd>{entry.progressPercent}% of required items complete</dd>
+            <dt className="font-medium">{t("courses.infoProgress")}</dt>
+            <dd>{t("courses.infoProgressValue", { percent: entry.progressPercent })}</dd>
           </>
         ) : null}
       </dl>
@@ -107,16 +108,16 @@ function CourseMenu({ entry }: { entry: CourseListEntry }) {
     <details className="relative">
       <summary
         className="inline-flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-md hover:bg-canvas [&::-webkit-details-marker]:hidden"
-        aria-label={`Course options for ${title}`}
+        aria-label={t("courses.menu", { title })}
       >
         <MoreHorizontal aria-hidden="true" className="h-5 w-5" />
       </summary>
       <ul className="absolute right-0 z-10 mt-1 w-52 rounded-md border border-line bg-panel py-1 text-sm shadow-lg">
-        <li><Link className="block px-3 py-2 hover:bg-canvas" href={`/courses/${id}`}>Open course</Link></li>
-        <li><Link className="block px-3 py-2 hover:bg-canvas" href={`/courses/${id}/content`}>Course content</Link></li>
-        <li><Link className="block px-3 py-2 hover:bg-canvas" href={`/courses/${id}/grades`}>Grades</Link></li>
-        <li><Link className="block px-3 py-2 hover:bg-canvas" href={`/messages?offering=${id}`}>Messages</Link></li>
-        <li><Link className="block px-3 py-2 hover:bg-canvas" href={`/courses/${id}/calendar`}>Calendar</Link></li>
+        <li><Link className="block px-3 py-2 hover:bg-canvas" href={`/courses/${id}`}>{t("courses.menuOpen")}</Link></li>
+        <li><Link className="block px-3 py-2 hover:bg-canvas" href={`/courses/${id}/content`}>{t("courses.menuContent")}</Link></li>
+        <li><Link className="block px-3 py-2 hover:bg-canvas" href={`/courses/${id}/grades`}>{t("courses.menuGrades")}</Link></li>
+        <li><Link className="block px-3 py-2 hover:bg-canvas" href={`/messages?offering=${id}`}>{t("courses.menuMessages")}</Link></li>
+        <li><Link className="block px-3 py-2 hover:bg-canvas" href={`/courses/${id}/calendar`}>{t("courses.menuCalendar")}</Link></li>
       </ul>
     </details>
   );
@@ -141,7 +142,7 @@ export function CourseRow({ entry, tz }: { entry: CourseListEntry; tz: string })
             <span aria-hidden="true">|</span>
             <MoreInfo entry={entry} tz={tz} />
           </div>
-          {entry.offering.is_sample ? <Badge className="mt-2">Sample data</Badge> : null}
+          {entry.offering.is_sample ? <Badge className="mt-2">{t("app.sample")}</Badge> : null}
         </div>
         <FavoriteButton offeringId={o.id} title={title} favorite={entry.favorite} />
         <CourseMenu entry={entry} />
@@ -172,9 +173,8 @@ export function CourseCard({ entry }: { entry: CourseListEntry }) {
         </div>
         {entry.progressPercent !== null ? (
           <div className="mt-2 text-sm">
-            <span className="sr-only">Progress: </span>
-            <progress max={100} value={entry.progressPercent} className="h-2 w-full" aria-label={`Progress ${entry.progressPercent}%`} />
-            <span className="text-muted">{entry.progressPercent}% complete</span>
+            <progress max={100} value={entry.progressPercent} className="h-2 w-full" aria-label={t("courses.progressLabel", { percent: entry.progressPercent })} />
+            <span className="text-muted">{t("courses.percentComplete", { percent: entry.progressPercent })}</span>
           </div>
         ) : null}
         <div className="mt-auto flex items-center justify-end pt-2">

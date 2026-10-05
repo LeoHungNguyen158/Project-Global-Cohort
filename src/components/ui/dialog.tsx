@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import { X } from "lucide-react";
+import { t } from "@/i18n";
 
 /**
  * Accessible modal built on the native <dialog> element: focus is trapped by the
@@ -53,7 +54,7 @@ export function Dialog({
           <h2 id={titleId} className="text-lg font-semibold">{title}</h2>
           {description ? <p id={descId} className="text-sm text-muted">{description}</p> : null}
         </div>
-        <button type="button" onClick={() => ref.current?.close()} className="rounded-md p-2 hover:bg-canvas" aria-label="Close dialog">
+        <button type="button" onClick={() => ref.current?.close()} className="rounded-md p-2 hover:bg-canvas" aria-label={t("common.closeDialog")}>
           <X aria-hidden="true" className="h-5 w-5" />
         </button>
       </div>

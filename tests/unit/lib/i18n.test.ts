@@ -40,7 +40,8 @@ describe("interface dictionaries", () => {
   it("has no empty, untrimmed or malformed strings", () => {
     const bad: string[] = [];
     for (const [key, value] of Object.entries(en as Record<string, string>)) {
-      if (!/^[a-z][A-Za-z0-9]*(\.[A-Za-z0-9]+)+$/.test(key)) bad.push(`key format: ${key}`);
+      // Later segments may mirror database values such as "access_request".
+      if (!/^[a-z][A-Za-z0-9]*(\.[A-Za-z0-9_]+)+$/.test(key)) bad.push(`key format: ${key}`);
       if (typeof value !== "string" || value.trim() === "") bad.push(`empty: ${key}`);
       else if (value !== value.trim()) bad.push(`whitespace: ${key}`);
       // Placeholders look like {name}; braces must balance.
