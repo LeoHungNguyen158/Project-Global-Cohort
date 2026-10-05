@@ -48,6 +48,22 @@ export function validateCohort(input: CohortInput): FieldErrors {
   return errors;
 }
 
+export type CommunityInput = {
+  name: string;
+  description: string;
+  cohortId: string | null;
+  joinPolicy: string;
+};
+
+/** Error keys (dictionary suffixes) per field; empty when valid. */
+export function validateCommunity(input: CommunityInput): FieldErrors {
+  const errors: FieldErrors = {};
+  if (input.name.length < 1 || input.name.length > 200) errors.name = "name";
+  if (input.description.length > 2000) errors.description = "description";
+  if (!["open", "invite"].includes(input.joinPolicy)) errors.join_policy = "joinPolicy";
+  return errors;
+}
+
 export type OfferingInput = {
   code: string;
   termLabel: string;

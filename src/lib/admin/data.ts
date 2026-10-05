@@ -80,6 +80,44 @@ export function offeringLabel(o: Pick<AdminOffering, "code" | "course_versions" 
   return title ? `${o.code} — ${title}` : o.code;
 }
 
+export type AdminCommunity = {
+  id: string;
+  cohort_id: string | null;
+  name: string;
+  description: string;
+  join_policy: "open" | "invite";
+  is_sample: boolean;
+  created_at: string;
+  cohorts: { code: string; name: string; status: string } | null;
+};
+
+const COMMUNITY_COLUMNS = "id, cohort_id, name, description, join_policy, is_sample, created_at, cohorts(code, name, status)";
+
+/** Same rule as the communities_write policy: program-wide ones need a platform administrator. */
+export function canManageCommunity(ctx: AdminContext, community: { cohort_id: string | null }): boolean {
+  return community.cohort_id === null ? ctx.isPlatformAdmin : canAdminCohort(ctx, community.cohort_id);
+}
+
+/**
+ * Communities this administrator may manage. RLS also returns communities the person can
+ * merely see (program-wide ones, their own cohort's), so the list is narrowed to managed ones.
+ */
+export async function listAdminCommunities(ctx: AdminContext): Promise<AdminCommunity[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("communities").select(COMMUNITY_COLUMNS);
+  if (error) throw new Error("Could not load communities");
+  return ((data ?? []) as unknown as AdminCommunity[]).filter((c) => canManageCommunity(ctx, c)).sort((a, b) => a.name.localeCompare(b.name));
+}
+
+export async function getAdminCommunity(ctx: AdminContext, communityId: string): Promise<AdminCommunity | null> {
+  if (!/^[0-9a-f-]{36}$/i.test(communityId)) return null;
+  const supabase = await createClient();
+  const { data } = await supabase.from("communities").select(COMMUNITY_COLUMNS).eq("id", communityId).maybeSingle();
+  const community = (data as unknown as AdminCommunity | null) ?? null;
+  if (!community || !canManageCommunity(ctx, community)) return null;
+  return community;
+}
+
 /** Pagination helper for list pages (1-based page numbers). */
 export function pageWindow(pageParam: string | undefined, perPage: number) {
   const page = Math.max(1, Math.min(10_000, Number.parseInt(pageParam ?? "1", 10) || 1));

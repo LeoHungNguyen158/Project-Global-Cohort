@@ -21,6 +21,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
     { href: "/admin/import", label: t("admin.nav.import") },
     { href: "/admin/access-requests", label: t("admin.nav.accessRequests") },
     { href: "/admin/cohorts", label: t("admin.nav.cohorts") },
+    { href: "/admin/communities", label: t("admin.nav.communities") },
     ...(platform ? [{ href: "/admin/courses", label: t("admin.nav.courses") }] : []),
     { href: "/admin/offerings", label: t("admin.nav.offerings") },
     { href: "/admin/reports", label: t("admin.nav.reports") },

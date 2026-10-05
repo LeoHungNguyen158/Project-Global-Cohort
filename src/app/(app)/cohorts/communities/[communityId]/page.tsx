@@ -11,7 +11,7 @@ import { Disclosure } from "@/components/ui/disclosure";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Pagination } from "@/components/ui/pagination";
 import { Panel, PanelHeader } from "@/components/ui/panel";
-import { CommunityMembership, communityCounts } from "@/components/cohorts/community-card";
+import { CommunityMembership, communityAudience, communityCounts } from "@/components/cohorts/community-card";
 import { SectionTitle } from "@/components/announcements/section-title";
 import { TopicList } from "@/components/discussions/topic-list";
 import { loadTopicList } from "@/lib/comms/discussion-queries";
@@ -62,12 +62,22 @@ export default async function CommunityPage({
         description={
           <span className="flex flex-wrap items-center gap-2">
             <span>
-              {community.cohort_name ? t("community.forCohort", { cohort: community.cohort_name }) : t("community.openToAll")} · {memberText} · {topicText}
+              {communityAudience(community)} · {memberText} · {topicText}
             </span>
             {community.is_member ? <Badge tone="success">{t("community.joinedBadge")}</Badge> : null}
           </span>
         }
-        actions={<CommunityMembership community={community} />}
+        actions={
+          <>
+            <CommunityMembership community={community} />
+            {/* Administrators add and remove members (invitation-only communities included) in Administration. */}
+            {community.can_manage ? (
+              <ButtonLink href={`/admin/communities/${community.community_id}`} variant="secondary" size="sm">
+                {t("community.manage")}
+              </ButtonLink>
+            ) : null}
+          </>
+        }
       />
       <PageBody className="space-y-6">
         <Alert tone="info">{t("community.accessNote")}</Alert>

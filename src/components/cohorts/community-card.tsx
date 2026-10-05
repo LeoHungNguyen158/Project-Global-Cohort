@@ -14,6 +14,12 @@ export function communityCounts(c: Pick<CommunitySummary, "member_count" | "topi
   return { members, topics };
 }
 
+/** Who can see the community: one cohort's people, or every participant (open or by invitation). */
+export function communityAudience(c: Pick<CommunitySummary, "cohort_name" | "join_policy">) {
+  if (c.cohort_name) return t("community.forCohort", { cohort: c.cohort_name });
+  return c.join_policy === "invite" ? t("community.programWideInvite") : t("community.openToAll");
+}
+
 /** Join (open communities), leave (members), or the reason neither is offered. */
 export function CommunityMembership({ community }: { community: CommunitySummary }) {
   if (community.is_member) {
@@ -63,7 +69,7 @@ export function CommunityCard({ community, headingLevel = 3 }: { community: Comm
             </Link>
           </H>
           <p className="text-sm text-muted">
-            {community.cohort_name ? t("community.forCohort", { cohort: community.cohort_name }) : t("community.openToAll")} · {members} · {topics}
+            {communityAudience(community)} · {members} · {topics}
           </p>
         </div>
         {community.is_member ? <Badge tone="success">{t("community.joinedBadge")}</Badge> : null}
