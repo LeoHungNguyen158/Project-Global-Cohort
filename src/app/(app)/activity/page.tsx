@@ -7,7 +7,7 @@ import {
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { listMyOfferings, offeringPhase, offeringTitle, type OfferingSummary } from "@/lib/data/offerings";
-import { formatDate, formatDateTime, formatTime } from "@/lib/time";
+import { formatDate, formatDateTime, formatTime, utcToWallTime } from "@/lib/time";
 import { openNotification, markAllNotificationsRead } from "@/app/actions/activity";
 import { Panel } from "@/components/ui/panel";
 import { Badge } from "@/components/ui/badge";
@@ -110,7 +110,7 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
     }),
   );
 
-  const upcoming = await loadUpcoming(supabase, current, user.id, staffIds);
+  const upcoming = await loadUpcoming(supabase, current, user.id, staffIds, tz);
 
   return (
     <>
@@ -263,9 +263,8 @@ function StreamItem({ n, tz, offering, cohort }: { n: Notification; tz: string; 
         {n.body ? <p className="text-sm text-muted">{n.body}</p> : null}
         <form action={openNotification} className="mt-2">
           <input type="hidden" name="id" value={n.id} />
-          <button type="submit" className={buttonClass("subtle", "sm")}>
+          <button type="submit" className={buttonClass("subtle", "sm")} aria-label={`${n.kind === "grade" ? t("activity.viewMyGrade") : t("activity.open")}: ${n.title}`}>
             {n.kind === "grade" ? t("activity.viewMyGrade") : t("activity.open")}
-            <span className="sr-only">: {n.title}</span>
           </button>
         </form>
       </div>
@@ -273,11 +272,20 @@ function StreamItem({ n, tz, offering, cohort }: { n: Notification; tz: string; 
   );
 }
 
+/** The calendar list view on the event's day, in the course calendar or the cohort scope. */
+function eventHref(e: { offering_id: string | null; cohort_id: string | null; starts_at: string }, tz: string): string {
+  const params = new URLSearchParams({ view: "list", date: utcToWallTime(e.starts_at, tz).slice(0, 10) });
+  if (e.offering_id) return `/courses/${e.offering_id}/calendar?${params}`;
+  if (e.cohort_id) params.set("scope", `cohort:${e.cohort_id}`);
+  return `/calendar?${params}`;
+}
+
 async function loadUpcoming(
   supabase: Awaited<ReturnType<typeof createClient>>,
   current: OfferingSummary[],
   userId: string,
   staffIds: Set<string>,
+  tz: string,
 ): Promise<Upcoming[]> {
   if (current.length === 0) return [];
   const ids = current.map((o) => o.id);
@@ -287,7 +295,7 @@ async function loadUpcoming(
   const [asg, quizzes, events] = await Promise.all([
     supabase.from("assignments").select("id, offering_id, title, due_at").in("offering_id", ids).eq("status", "published").gte("due_at", now.toISOString()).lte("due_at", until).order("due_at"),
     supabase.from("quizzes").select("id, offering_id, title, closes_at").in("offering_id", ids).eq("status", "published").gte("closes_at", now.toISOString()).lte("closes_at", until).order("closes_at"),
-    supabase.from("calendar_events").select("id, offering_id, cohort_id, title, starts_at, kind").gte("starts_at", now.toISOString()).lte("starts_at", until).order("starts_at").limit(20),
+    supabase.from("calendar_events").select("id, offering_id, cohort_id, title, starts_at, kind").is("cancelled_at", null).gte("starts_at", now.toISOString()).lte("starts_at", until).order("starts_at").limit(20),
   ]);
   const learnerAssignments = (asg.data ?? []).filter((a) => !staffIds.has(a.offering_id));
   const submitted = new Set<string>();
@@ -314,7 +322,7 @@ async function loadUpcoming(
       kind: "event",
       label: e.title,
       detail: `${kindLabel}${o ? ` · ${o.code}` : ""}`,
-      href: e.offering_id ? `/courses/${e.offering_id}/calendar` : "/calendar",
+      href: eventHref(e, tz),
     });
   }
   return out.sort((a, b) => a.when.localeCompare(b.when)).slice(0, 15);
